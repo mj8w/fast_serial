@@ -31,6 +31,9 @@ class MainWindow(QMainWindow):
         self.ui.portButton.clicked.connect(self.setup_dialog)
         self.on_comport_off()
         
+        self.scrollbar = self.ui.comActivityEdit.verticalScrollBar()
+        self.scrollbar.sliderReleased.connect(self.on_scroll)
+        self.autoscroll = False
         self.serial = SerialPort()
 
     def resizeEvent(self, event):
@@ -74,6 +77,17 @@ class MainWindow(QMainWindow):
     def add_to_serial_output(self, output):
         info(f"add {output}")
         self.ui.comActivityEdit.insertPlainText(output)
+        
+        # auto scroll to end
+        if self.autoscroll:
+            self.scrollbar.setValue(self.scrollbar.maximum())
+        
+    def on_scroll(self):
+        current = self.scrollbar.value()
+        if current >= self.scrollbar.maximum():
+            self.autoscroll = True
+        else:
+            self.autoscroll = False
         
     def on_comport_off(self):
         info(f"comport is OFF")
