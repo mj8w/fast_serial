@@ -87,7 +87,7 @@ class MainWindow(QMainWindow):
         self.serial.closed.connect(self.on_comport_off)
 
     def add_to_serial_output(self, output):
-        info(f"add {output}")
+        info(f"{output.strip()}")
         self.ui.comActivityEdit.insertPlainText(output)
 
         # auto scroll to end
