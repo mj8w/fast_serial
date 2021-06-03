@@ -1,5 +1,4 @@
 import sys
-import traceback
 
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
@@ -13,6 +12,17 @@ from ui.setup_dialog import SetupDialog, Message
 from lib.set import add_user_setting, window_size, actions
 from lib.serial_port import SerialPort
 # from lib.git_version import git_short_version
+
+from PyQt5 import QtCore
+import traceback
+
+if QtCore.QT_VERSION >= 0x50501:
+
+    def excepthook(type_, value, traceback_):
+        traceback.print_exception(type_, value, traceback_)
+        QtCore.qFatal('')
+
+sys.excepthook = excepthook
 
 class MainWindow(QMainWindow):
 
