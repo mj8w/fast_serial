@@ -96,7 +96,7 @@ class MainWindow(QMainWindow):
 
     def on_scroll(self):
         current = self.scrollbar.value()
-        if current >= self.scrollbar.maximum():
+        if current >= self.scrollbar.maximum() - 3: # add in a little fudge for fast moving data
             self.autoscroll = True
         else:
             self.autoscroll = False
