@@ -3,13 +3,11 @@ import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
 from lib.project import logset
-from PyQt5.Qt import QListWidgetItem, QLayout, QWidget
 debug, info, warn, err = logset('app')
 
 from ui.ui_application import Ui_MainWindow
-from ui.ui_list_item import Ui_Form as list_item
 from ui.setup_dialog import SetupDialog, Message
-from lib.set import add_user_setting, window_size, actions
+from lib.set import add_user_setting, window_size
 from lib.serial_port import SerialPort
 # from lib.git_version import git_short_version
 
@@ -46,32 +44,10 @@ class MainWindow(QMainWindow):
         self.autoscroll = False
         self.serial = SerialPort()
 
-        # load the actions into the list widget
-        for action in actions:
-            self.addAddEntry(action)
-        self.addAddEntry()
+        self.ui.helpButton.clicked.connect(self.help_clicked)
 
-    def addAddEntry(self, action = None):
-        item = QListWidgetItem()
-
-        # Create widget
-        widget = QWidget()
-        widget.ui = list_item()
-        widget.ui.setupUi(widget)
-        widget.ui.horizontalLayout.setSizeConstraint(QLayout.SetFixedSize)
-        item.setSizeHint(widget.sizeHint())
-
-        if action is None:
-            widget.ui.nameLabel.setText("...")
-            widget.ui.actionLabel.setText("")
-            widget.ui.editButton.setText("Add")
-        else:
-            widget.ui.nameLabel.setText(action)
-            widget.ui.actionLabel.setText(actions[action])
-
-        # Add widget to QListWidget funList
-        self.ui.buttonsListBox.addItem(item)
-        self.ui.buttonsListBox.setItemWidget(item, widget)
+    def help_clicked(self):
+        self.serial.write("help\r\n")
 
     def resizeEvent(self, event):
         if self.save_resizing:
@@ -84,8 +60,7 @@ class MainWindow(QMainWindow):
 
     def setup_dialog(self):
 
-        # TODO: turn off any active serial communications
-        # self.serial.close()
+        self.serial.close()
 
         # prepare the run dialog
         dialog = SetupDialog(self)

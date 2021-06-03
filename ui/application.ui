@@ -6,22 +6,22 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>560</width>
-    <height>549</height>
+    <width>645</width>
+    <height>598</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Fast Serial</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
+   <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <item>
      <widget class="QSplitter" name="splitter">
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <widget class="QWidget" name="layoutWidget">
-       <layout class="QVBoxLayout" name="verticalLayout_2">
+      <widget class="QWidget" name="">
+       <layout class="QVBoxLayout" name="verticalLayout">
         <item>
          <widget class="QPushButton" name="portButton">
           <property name="maximumSize">
@@ -67,12 +67,9 @@
          </layout>
         </item>
         <item>
-         <widget class="QListWidget" name="buttonsListBox">
-          <property name="minimumSize">
-           <size>
-            <width>300</width>
-            <height>0</height>
-           </size>
+         <widget class="QPushButton" name="helpButton">
+          <property name="text">
+           <string>help</string>
           </property>
          </widget>
         </item>
@@ -117,7 +114,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>560</width>
+     <width>645</width>
      <height>21</height>
     </rect>
    </property>
