@@ -2,14 +2,15 @@ import sys
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QListWidgetItem
 from PyQt5.QtGui import QFont
+from PyQt5.QtCore import QRect
 
 from lib.project import logset
 from PyQt5.Qt import QFontDatabase
 debug, info, warn, err = logset('app')
 
 from ui.ui_application import Ui_MainWindow
-from ui.setup_dialog import SetupDialog, Message
-from lib.set import add_user_setting, window_size, actions, baud_rates
+
+from lib.set import add_user_setting, window_size, actions, baud_rates, splitter_pos
 from lib.serial_port import SerialPort
 from serial.tools import list_ports
 
@@ -29,16 +30,12 @@ sys.excepthook = excepthook
 class MainWindow(QMainWindow):
 
     def __init__(self):
-        self.save_resizing = False
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
+        self.setGeometry(QRect(*window_size))
         self.show()
-
-        self.win_width, self.win_height = window_size
-        self.resize(self.win_width, self.win_height)
-        self.save_resizing = True
 
         self.ui.connectButton.clicked.connect(self.on_connect_clicked)
         self.on_comport_off()
@@ -66,6 +63,16 @@ class MainWindow(QMainWindow):
         self.ui.baudCBox.addItems(baud_rates)
         self.on_refresh()
 
+        self.ui.splitter.splitterMoved.connect(self.on_splitter_moved)
+        self.ui.splitter.moveSplitter(splitter_pos[1], 1)
+        self.ui.splitter.setHandleWidth(1)
+
+    def on_splitter_moved(self, pos, index):
+
+        positions = [0, 0]
+        positions[index] = pos
+        add_user_setting('splitter_pos', positions)
+
     def on_refresh(self):
         available_ports = list_ports.comports()
         for port in available_ports:
@@ -85,15 +92,6 @@ class MainWindow(QMainWindow):
     def on_edit(self):
         item = self.ui.actionList.currentItem()
         info(f"edit {item.action}")
-
-    def resizeEvent(self, event):
-        if self.save_resizing:
-            width = self.frameGeometry().width()
-            height = self.frameGeometry().height()
-            if self.win_width != width or self.win_height != height:
-                debug(f"resize to {self.win_width} {self.win_height}")
-                add_user_setting('window_size', (width, height))
-        QMainWindow.resizeEvent(self, event)
 
     def on_connect_clicked(self):
         if self.connected:
@@ -135,6 +133,10 @@ class MainWindow(QMainWindow):
         self.ui.comActivityEdit.setStyleSheet("border: 1px solid white; background-color: beige;")
 
     def closeEvent(self, event):
+        geometry = self.geometry().getRect()
+        info(f"save geometry as {geometry}")
+        add_user_setting('window_size', geometry)
+
         self.serial.close()
         event.accept()
 

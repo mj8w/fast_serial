@@ -9,8 +9,10 @@ settings = "\\".join([base_dir, settings_file])
 # get the default settings
 values = {
     'window_size':[500, 700],
-    'actions':{'help':'help\r\n', '?':'?\r\n'}
-    'baud_rates':['1200','2400','4800','9600','19200','38400','57600','115200']
+    'actions':{'help':'help\r\n', '?':'?\r\n'},
+    'baud_rates':['1200', '2400', '4800', '9600', '19200', '38400', '57600', '115200'],
+    'splitter_pos':[0, 258],
+    'window_size':(167, 118, 1262, 367),
 }
 
 def rewrite_settings_file(new_values = {}):
@@ -40,18 +42,13 @@ def add_user_setting(variable, value):
             f.write(line)
 
 try:
-    from settings import window_size, actions
+    from settings import baud_rates, splitter_pos, window_size, actions
 except:
     rewrite_settings_file()
-    window_size = [500, 500]
+    baud_rates = ['1200', '2400', '4800', '9600', '19200', '38400', '57600', '115200']
+    splitter_pos = [0, 258]
+    window_size = (167, 118, 1262, 367)
     actions = {'help':'help\r\n', '?':'?\r\n'}
 
-try:
-    from settings import baud_rates
-except:
-    rewrite_settings_file()
-    baud_rates = ['1200','2400','4800','9600','19200','38400','57600','115200']
-
-    
-_ = (window_size, actions, baud_rates)
+_ = (window_size, splitter_pos, actions, baud_rates)
 
