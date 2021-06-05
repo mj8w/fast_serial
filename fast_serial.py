@@ -1,14 +1,15 @@
 import sys
 
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow, QListWidgetItem, QLayout
 
 from lib.project import logset
 debug, info, warn, err = logset('app')
 
 from ui.ui_application import Ui_MainWindow
 from ui.setup_dialog import SetupDialog, Message
-from lib.set import add_user_setting, window_size
+from lib.set import add_user_setting, window_size, actions
 from lib.serial_port import SerialPort
+from lib.list_item import ActionListItem
 # from lib.git_version import git_short_version
 
 from PyQt5 import QtCore
@@ -44,10 +45,33 @@ class MainWindow(QMainWindow):
         self.autoscroll = False
         self.serial = SerialPort()
 
-        self.ui.helpButton.clicked.connect(self.help_clicked)
+        for action in actions:
+            # info(f"{action} {actions[action]}")
+            action_item = ActionListItem(None, action, actions[action])
+            item = QListWidgetItem()
 
-    def help_clicked(self):
-        self.serial.write("help\r\n")
+            action_item.ui.horizontalLayout.setSizeConstraint(QLayout.SetFixedSize)
+            action_item.setLayout(action_item.ui.horizontalLayout)
+            item.setSizeHint(action_item.sizeHint())
+
+            self.ui.actionList.addItem(item)
+            self.ui.actionList.setItemWidget(item, action_item)
+
+            action_item.edit.connect(self.on_edit)
+
+        self.ui.actionList.itemDoubleClicked.connect(self.on_dclicked_item)
+        self.ui.addButton.clicked.connect(self.on_add)
+
+    def on_add(self):
+        info(f"clicked Add Button")
+
+    def on_dclicked_item(self, item):
+        action_item = self.ui.actionList.itemWidget(item)
+        info(f"clicked {action_item.ui.nameLabel.text()}, {action_item.ui.actionLabel.text()}")
+
+    def on_edit(self, form):
+        item = self.ui.actionList.currentItem()
+        info(f"{form.nameLabel.text()}, {item}")
 
     def resizeEvent(self, event):
         if self.save_resizing:
