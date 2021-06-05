@@ -1,6 +1,6 @@
 import sys
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QListWidgetItem, QLayout
+from PyQt5.QtWidgets import QApplication, QMainWindow, QListWidgetItem
 from PyQt5.QtGui import QFont
 
 from lib.project import logset
@@ -9,9 +9,10 @@ debug, info, warn, err = logset('app')
 
 from ui.ui_application import Ui_MainWindow
 from ui.setup_dialog import SetupDialog, Message
-from lib.set import add_user_setting, window_size, actions
+from lib.set import add_user_setting, window_size, actions, baud_rates
 from lib.serial_port import SerialPort
-from lib.list_item import ActionListItem
+from serial.tools import list_ports
+
 # from lib.git_version import git_short_version
 
 from PyQt5 import QtCore
@@ -39,7 +40,7 @@ class MainWindow(QMainWindow):
         self.resize(self.win_width, self.win_height)
         self.save_resizing = True
 
-        self.ui.portButton.clicked.connect(self.setup_dialog)
+        self.ui.connectButton.clicked.connect(self.on_connect_clicked)
         self.on_comport_off()
 
         self.scrollbar = self.ui.comActivityEdit.verticalScrollBar()
@@ -61,7 +62,17 @@ class MainWindow(QMainWindow):
         font_db.addApplicationFont("ui\\resource\\source-code-pro\\SourceCodePro-Regular.ttf")
         font = QFont("Source Code Pro", 9)
         self.ui.comActivityEdit.setCurrentFont(font)
-        
+
+        self.ui.baudCBox.addItems(baud_rates)
+        self.on_refresh()
+
+    def on_refresh(self):
+        available_ports = list_ports.comports()
+        for port in available_ports:
+            if "Bluetooth" in port.description:
+                continue
+            info(f"{port.name}, {port.description}, {port.hwid}")
+            self.ui.portCBox.addItem(port.name, None)
 
     def on_add(self):
         info(f"clicked Add Button")
@@ -84,33 +95,25 @@ class MainWindow(QMainWindow):
                 add_user_setting('window_size', (width, height))
         QMainWindow.resizeEvent(self, event)
 
-    def setup_dialog(self):
+    def on_connect_clicked(self):
+        if self.connected:
+            self.serial.close()
+            self.on_comport_off()
+        else:
+            baud = SetupDialog.baud
+            comport = SetupDialog.comport
 
-        self.serial.close()
+            # try to open the serial port
+            if self.serial.open(comport, baud) == False:
+                Message("Unable to open the port.")
+                return
 
-        # prepare the run dialog
-        dialog = SetupDialog(self)
-        SetupDialog.started = False
-        dialog.exec()
+            info(f"Port Opened")
+            self.ui.comActivityEdit.setStyleSheet("border: 1px solid gray; background-color: white;")
 
-        started = SetupDialog.started
-        baud = SetupDialog.baud
-        comport = SetupDialog.comport
-
-        # try to open the serial port
-        if self.serial.open(comport, baud) == False:
-            Message("Unable to open the port.")
-            return
-
-        if not started:
-            return
-
-        info(f"Port Opened")
-        self.ui.comActivityEdit.setStyleSheet("border: 1px solid gray; background-color: white;")
-
-        # start collecting data in the background
-        self.serial.read_text.connect(self.add_to_serial_output)
-        self.serial.closed.connect(self.on_comport_off)
+            # start collecting data in the background
+            self.serial.read_text.connect(self.add_to_serial_output)
+            self.serial.closed.connect(self.on_comport_off)
 
     def add_to_serial_output(self, output):
 
