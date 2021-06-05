@@ -47,31 +47,26 @@ class MainWindow(QMainWindow):
 
         for action in actions:
             # info(f"{action} {actions[action]}")
-            action_item = ActionListItem(None, action, actions[action])
-            item = QListWidgetItem()
-
-            action_item.ui.horizontalLayout.setSizeConstraint(QLayout.SetFixedSize)
-            action_item.setLayout(action_item.ui.horizontalLayout)
-            item.setSizeHint(action_item.sizeHint())
-
+            item = QListWidgetItem(action)
+            item.action = actions[action]
             self.ui.actionList.addItem(item)
-            self.ui.actionList.setItemWidget(item, action_item)
-
-            action_item.edit.connect(self.on_edit)
 
         self.ui.actionList.itemDoubleClicked.connect(self.on_dclicked_item)
         self.ui.addButton.clicked.connect(self.on_add)
+        self.ui.editButton.clicked.connect(self.on_edit)
+
 
     def on_add(self):
         info(f"clicked Add Button")
 
     def on_dclicked_item(self, item):
-        action_item = self.ui.actionList.itemWidget(item)
-        info(f"clicked {action_item.ui.nameLabel.text()}, {action_item.ui.actionLabel.text()}")
+        info(f"clicked {item.text()}, {item.action}")
+        self.serial.write(item.action)
+        self.ui.comActivityEdit.insertPlainText(item.action)
 
-    def on_edit(self, form):
+    def on_edit(self):
         item = self.ui.actionList.currentItem()
-        info(f"{form.nameLabel.text()}, {item}")
+        info(f"edit {item.action}")
 
     def resizeEvent(self, event):
         if self.save_resizing:
@@ -128,6 +123,10 @@ class MainWindow(QMainWindow):
     def on_comport_off(self):
         info(f"comport is OFF")
         self.ui.comActivityEdit.setStyleSheet("border: 1px solid white; background-color: beige;")
+
+    def closeEvent(self, event):
+        self.serial.close()
+        event.accept()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
