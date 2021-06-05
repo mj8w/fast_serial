@@ -1,8 +1,10 @@
 import sys
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QListWidgetItem, QLayout
+from PyQt5.QtGui import QFont
 
 from lib.project import logset
+from PyQt5.Qt import QFontDatabase
 debug, info, warn, err = logset('app')
 
 from ui.ui_application import Ui_MainWindow
@@ -55,6 +57,11 @@ class MainWindow(QMainWindow):
         self.ui.addButton.clicked.connect(self.on_add)
         self.ui.editButton.clicked.connect(self.on_edit)
 
+        font_db = QFontDatabase()
+        font_db.addApplicationFont("ui\\resource\\source-code-pro\\SourceCodePro-Regular.ttf")
+        font = QFont("Source Code Pro", 9)
+        self.ui.comActivityEdit.setCurrentFont(font)
+        
 
     def on_add(self):
         info(f"clicked Add Button")
