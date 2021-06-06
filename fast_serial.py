@@ -10,7 +10,7 @@ debug, info, warn, err = logset('app')
 
 from ui.ui_application import Ui_MainWindow
 
-from lib.set import add_user_setting, window_size, actions, baud_rates, splitter_pos
+from lib.set import add_user_setting, window_size, actions, baud_rates, splitter_pos, baud_rate, com_port
 from lib.serial_port import SerialPort
 from lib.action_dialog import ActionDialog
 from serial.tools import list_ports
@@ -64,11 +64,22 @@ class MainWindow(QMainWindow):
         self.ui.comActivityEdit.setCurrentFont(font)
 
         self.ui.baudCBox.addItems(baud_rates)
+        self.ui.baudCBox.setCurrentText(baud_rate)
         self.on_refresh()
+        self.ui.portCBox.setCurrentText(com_port)
 
         self.ui.splitter.splitterMoved.connect(self.on_splitter_moved)
         self.ui.splitter.moveSplitter(splitter_pos[1], 1)
         self.ui.splitter.setHandleWidth(1)
+
+        self.ui.baudCBox.currentTextChanged.connect(self.on_baud_changed)
+        self.ui.portCBox.currentTextChanged.connect(self.on_port_changed)
+
+    def on_baud_changed(self, text):
+        add_user_setting("baud_rate", text)
+
+    def on_port_changed(self, text):
+        add_user_setting("com_port", text)
 
     def on_splitter_moved(self, pos, index):
 
