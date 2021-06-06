@@ -98,12 +98,12 @@ class MainWindow(QMainWindow):
             self.serial.close()
             self.on_comport_off()
         else:
-            baud = SetupDialog.baud
-            comport = SetupDialog.comport
-
+            baud = self.ui.baudCBox.currentText()
+            comport = self.ui.portCBox.currentText()
+            info(f"baud {baud}")
+            info(f"comport {comport}")
             # try to open the serial port
             if self.serial.open(comport, baud) == False:
-                Message("Unable to open the port.")
                 return
 
             info(f"Port Opened")
@@ -112,6 +112,7 @@ class MainWindow(QMainWindow):
             # start collecting data in the background
             self.serial.read_text.connect(self.add_to_serial_output)
             self.serial.closed.connect(self.on_comport_off)
+            self.connected = True
 
     def add_to_serial_output(self, output):
 
@@ -131,6 +132,7 @@ class MainWindow(QMainWindow):
     def on_comport_off(self):
         info(f"comport is OFF")
         self.ui.comActivityEdit.setStyleSheet("border: 1px solid white; background-color: beige;")
+        self.connected = False
 
     def closeEvent(self, event):
         geometry = self.geometry().getRect()

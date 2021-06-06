@@ -49,14 +49,13 @@ class SerialPort(QObject):
                 btext = self.serial.read(100)
                 if len(btext):
                     text = btext.decode()
-                    self.read_text.emit(text)
-
                     buffer += text
                     pos = buffer.find("\n")
                     if pos > -1:
                         printable = buffer[:pos]
                         printable = printable.strip()
                         info(f"{printable}")
+                        self.read_text.emit(f"{printable}\n")
                         buffer = buffer[pos + 1:]
 
         except:
