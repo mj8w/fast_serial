@@ -12,6 +12,7 @@ from ui.ui_application import Ui_MainWindow
 
 from lib.set import add_user_setting, window_size, actions, baud_rates, splitter_pos
 from lib.serial_port import SerialPort
+from lib.action_dialog import ActionDialog
 from serial.tools import list_ports
 
 # from lib.git_version import git_short_version
@@ -83,6 +84,14 @@ class MainWindow(QMainWindow):
 
     def on_add(self):
         info(f"clicked Add Button")
+
+        dialog = ActionDialog(self)
+        dialog.exec()
+
+        if dialog.name != "":
+            item = QListWidgetItem(dialog.name)
+            item.action = dialog.action
+            self.ui.actionList.addItem(item)
 
     def on_dclicked_item(self, item):
         info(f"clicked {item.text()}, {item.action}")
