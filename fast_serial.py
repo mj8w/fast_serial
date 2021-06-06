@@ -39,6 +39,8 @@ class MainWindow(QMainWindow):
         self.show()
 
         self.ui.connectButton.clicked.connect(self.on_connect_clicked)
+        self.ui.connectButton.setCheckable(True)
+        self.ui.connectButton.setStyleSheet("background-color : lightgrey")
         self.on_comport_off()
 
         self.scrollbar = self.ui.comActivityEdit.verticalScrollBar()
@@ -103,10 +105,7 @@ class MainWindow(QMainWindow):
         info(f"edit {item.action}")
 
     def on_connect_clicked(self):
-        if self.connected:
-            self.serial.close()
-            self.on_comport_off()
-        else:
+        if self.ui.connectButton.isChecked():
             baud = self.ui.baudCBox.currentText()
             comport = self.ui.portCBox.currentText()
             info(f"baud {baud}")
@@ -115,13 +114,19 @@ class MainWindow(QMainWindow):
             if self.serial.open(comport, baud) == False:
                 return
 
+            self.ui.connectButton.setStyleSheet("background-color : lightblue")
+
             info(f"Port Opened")
             self.ui.comActivityEdit.setStyleSheet("border: 1px solid gray; background-color: white;")
 
             # start collecting data in the background
             self.serial.read_text.connect(self.add_to_serial_output)
             self.serial.closed.connect(self.on_comport_off)
-            self.connected = True
+        else:
+            self.ui.connectButton.setStyleSheet("background-color : lightgrey")
+            self.serial.read_text.disconnect()
+            self.serial.close()
+            self.on_comport_off()
 
     def add_to_serial_output(self, output):
 
@@ -141,7 +146,6 @@ class MainWindow(QMainWindow):
     def on_comport_off(self):
         info(f"comport is OFF")
         self.ui.comActivityEdit.setStyleSheet("border: 1px solid white; background-color: beige;")
-        self.connected = False
 
     def closeEvent(self, event):
         geometry = self.geometry().getRect()

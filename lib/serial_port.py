@@ -46,7 +46,11 @@ class SerialPort(QObject):
         buffer = "" # buffer for logging the resulting text line by line
         try:
             while(self.running):
-                btext = self.serial.read(100)
+                try:
+                    btext = self.serial.read(100)
+                except (SerialException): # this can happen on serial close
+                    continue
+
                 if len(btext):
                     text = btext.decode()
                     buffer += text
