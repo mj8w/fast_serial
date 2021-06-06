@@ -75,6 +75,11 @@ class MainWindow(QMainWindow):
         self.ui.baudCBox.currentTextChanged.connect(self.on_baud_changed)
         self.ui.portCBox.currentTextChanged.connect(self.on_port_changed)
 
+        self.ui.clearButton.clicked.connect(self.on_clear_clicked)
+
+    def on_clear_clicked(self):
+        self.ui.comActivityEdit.clear()
+
     def on_baud_changed(self, text):
         add_user_setting("baud_rate", text)
 
