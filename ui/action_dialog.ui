@@ -39,46 +39,6 @@
        </property>
       </spacer>
      </item>
-     <item>
-      <widget class="QGroupBox" name="groupBox">
-       <property name="title">
-        <string>End Of Line Options:</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <item>
-         <widget class="QRadioButton" name="crRadio">
-          <property name="text">
-           <string>Carriage Return</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QRadioButton" name="lfRadio">
-          <property name="text">
-           <string>Linefeed</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QRadioButton" name="bothRadio">
-          <property name="text">
-           <string>Both</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QRadioButton" name="noneRadio">
-          <property name="text">
-           <string>None</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
     </layout>
    </item>
    <item>

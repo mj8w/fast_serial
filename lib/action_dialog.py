@@ -16,5 +16,3 @@ class ActionDialog(QDialog):
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
 
-    def button_clicked(self, s):
-        info(f"{s} clicked")
