@@ -1,4 +1,5 @@
 import sys
+from serial.tools import list_ports
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QListWidgetItem
 from PyQt5.QtGui import QFont
@@ -9,6 +10,7 @@ from ui.ui_application import Ui_MainWindow
 from lib.set import add_user_setting, window_size, actions, baud_rates, splitter_pos, baud_rate, com_port
 from lib.serial_port import SerialPort
 from lib.action_dialog import ActionDialog
+from lib.text import RichText
 
 from lib.project import logset
 debug, info, warn, err = logset('app')
@@ -61,6 +63,7 @@ class MainWindow(QMainWindow):
         font_db.addApplicationFont("ui\\resource\\source-code-pro\\SourceCodePro-Regular.ttf")
         font = QFont("Source Code Pro", 9)
         self.ui.comActivityEdit.setCurrentFont(font)
+        self.com_traffic = RichText(self.ui.comActivityEdit)
 
         self.ui.baudCBox.addItems(baud_rates)
         self.ui.baudCBox.setCurrentText(baud_rate)
@@ -101,6 +104,26 @@ class MainWindow(QMainWindow):
                 continue
             info(f"{port.name}, {port.description}, {port.hwid}")
             self.ui.portCBox.addItem(port.name, None)
+
+    def on_dclicked_item(self, item):
+        info(f"dclicked {item.text()}, {item.action}")
+
+        if not self.ui.connectButton.isChecked():
+            return
+
+        ''' Translate the action script into text to send '''
+        replacement = {"<cr>":"\r", "<lf>":"\n"}
+        action = item.action
+        for r in replacement:
+            action = action.replace(r, replacement[r])
+
+        self.serial.write(action)
+        self.com_traffic.insert_output_text(action)
+
+    def on_clicked_item(self, item):
+        info(f"clicked {item.text()}, {item.action}")
+        self.ui.editButton.setEnabled(True) # enable once a row is selected
+        self.ui.removeButton.setEnabled(True)
 
     def on_add(self):
         info(f"clicked Add Button")
@@ -173,8 +196,7 @@ class MainWindow(QMainWindow):
             self.on_comport_off()
 
     def add_to_serial_output(self, output):
-
-        self.ui.comActivityEdit.insertPlainText(output)
+        self.com_traffic.insert_input_text(output)
 
         # auto scroll to end
         if self.autoscroll:

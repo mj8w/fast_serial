@@ -9,7 +9,7 @@ settings = "\\".join([base_dir, settings_file])
 # get the default settings
 values = {
     'window_size':[500, 700],
-    'actions':{'help':'help\r\n', '?':'?\r\n'},
+    'actions':{'help':'help<cr><lf>'},
     'baud_rates':['1200', '2400', '4800', '9600', '19200', '38400', '57600', '115200'],
     'splitter_pos':[0, 258],
     'window_size':(167, 118, 1262, 367),
@@ -50,9 +50,9 @@ except:
     baud_rates = ['1200', '2400', '4800', '9600', '19200', '38400', '57600', '115200']
     splitter_pos = [0, 258]
     window_size = (167, 118, 1262, 367)
-    actions = {'help':'help\r\n', '?':'?\r\n'}
+    actions = {'help':'help<cr><lf>', 'rx_list':'rx_list<cr><lf>'}
     baud_rate = '115200'
-    com_port = 'COM10'
+    com_port = 'COM3'
 
 _ = (window_size, splitter_pos, actions, baud_rates, baud_rate, com_port)
 
