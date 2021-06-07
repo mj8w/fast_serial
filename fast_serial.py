@@ -3,17 +3,15 @@ import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QListWidgetItem
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import QRect
-
-from lib.project import logset
 from PyQt5.Qt import QFontDatabase
-debug, info, warn, err = logset('app')
 
 from ui.ui_application import Ui_MainWindow
-
 from lib.set import add_user_setting, window_size, actions, baud_rates, splitter_pos, baud_rate, com_port
 from lib.serial_port import SerialPort
 from lib.action_dialog import ActionDialog
-from serial.tools import list_ports
+
+from lib.project import logset
+debug, info, warn, err = logset('app')
 
 # from lib.git_version import git_short_version
 
@@ -49,14 +47,15 @@ class MainWindow(QMainWindow):
         self.serial = SerialPort()
 
         for action in actions:
-            # info(f"{action} {actions[action]}")
             item = QListWidgetItem(action)
             item.action = actions[action]
             self.ui.actionList.addItem(item)
 
         self.ui.actionList.itemDoubleClicked.connect(self.on_dclicked_item)
+        self.ui.actionList.itemClicked.connect(self.on_clicked_item)
         self.ui.addButton.clicked.connect(self.on_add)
         self.ui.editButton.clicked.connect(self.on_edit)
+        self.ui.removeButton.clicked.connect(self.on_remove)
 
         font_db = QFontDatabase()
         font_db.addApplicationFont("ui\\resource\\source-code-pro\\SourceCodePro-Regular.ttf")
@@ -76,6 +75,9 @@ class MainWindow(QMainWindow):
         self.ui.portCBox.currentTextChanged.connect(self.on_port_changed)
 
         self.ui.clearButton.clicked.connect(self.on_clear_clicked)
+
+        self.ui.editButton.setEnabled(False)
+        self.ui.removeButton.setEnabled(False)
 
     def on_clear_clicked(self):
         self.ui.comActivityEdit.clear()
@@ -104,21 +106,47 @@ class MainWindow(QMainWindow):
         info(f"clicked Add Button")
 
         dialog = ActionDialog(self)
-        dialog.exec()
+        ActionDialog.name = ""
+        ActionDialog.action = ""
+        success = dialog.exec()
+        if not success:
+            return
 
-        if dialog.name != "":
-            item = QListWidgetItem(dialog.name)
-            item.action = dialog.action
-            self.ui.actionList.addItem(item)
+        if ActionDialog.name == "" or ActionDialog.action == "":
+            return
 
-    def on_dclicked_item(self, item):
-        info(f"clicked {item.text()}, {item.action}")
-        self.serial.write(item.action)
-        self.ui.comActivityEdit.insertPlainText(item.action)
+        item = QListWidgetItem(ActionDialog.name)
+        item.action = ActionDialog.action
+        self.ui.actionList.addItem(item)
+
+        actions.update({ActionDialog.name:ActionDialog.action})
+        add_user_setting('actions', actions)
 
     def on_edit(self):
         item = self.ui.actionList.currentItem()
-        info(f"edit {item.action}")
+        dialog = ActionDialog(self, item.text(), item.action)
+        info(f"edit {ActionDialog.name}")
+
+        success = dialog.exec()
+        if not success:
+            return
+
+        if ActionDialog.name == "" or ActionDialog.action == "":
+            return
+
+        item.setText(ActionDialog.name)
+        item.action = ActionDialog.action
+
+        actions.update({ActionDialog.name:ActionDialog.action})
+        add_user_setting('actions', actions)
+
+    def on_remove(self):
+        item = self.ui.actionList.currentItem()
+        actions.pop(item.text())
+        add_user_setting('actions', actions)
+
+        row = self.ui.actionList.currentRow()
+        self.ui.actionList.takeItem(row)
 
     def on_connect_clicked(self):
         if self.ui.connectButton.isChecked():
@@ -154,7 +182,7 @@ class MainWindow(QMainWindow):
 
     def on_scroll(self):
         current = self.scrollbar.value()
-        if current >= self.scrollbar.maximum() - 3: # add in a little fudge for fast moving data
+        if current >= self.scrollbar.maximum() - 5: # add in a little fudge for fast moving data
             self.autoscroll = True
         else:
             self.autoscroll = False
