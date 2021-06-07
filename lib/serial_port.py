@@ -4,7 +4,7 @@ from serial import Serial, SerialException
 from PyQt5.QtCore import QObject, pyqtSignal
 
 from lib.project import logset
-debug, info, warn, err = logset('app')
+debug, info, warn, err = logset('serial')
 
 class SerialPort(QObject):
     closed = pyqtSignal()
@@ -43,12 +43,25 @@ class SerialPort(QObject):
         """Read serial port task."""
         info(f"SerialPort.run()")
         self.running = True
+        buffer = "" # buffer for logging the resulting text line by line
         try:
             while(self.running):
-                btext = self.serial.read(100)
+                try:
+                    btext = self.serial.read(100)
+                except (SerialException): # this can happen on serial close
+                    continue
+
                 if len(btext):
                     text = btext.decode()
-                    self.read_text.emit(text)
+                    buffer += text
+                    pos = buffer.find("\n")
+                    if pos > -1:
+                        printable = buffer[:pos]
+                        printable = printable.strip()
+                        info(f"{printable}")
+                        self.read_text.emit(f"{printable}\n")
+                        buffer = buffer[pos + 1:]
+
         except:
             traceback.print_exc()
         info(f"Exiting SerialPort")
