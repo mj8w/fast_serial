@@ -14,35 +14,45 @@ class RichText():
         self.blackColor = QColor(0, 0, 0)
         self.crlf = re.compile("(\r\n|\n\r|\r|\n)")
 
-    def insert_input_text(self, text):
-
+    def append_black_text(self, text):
         self.textEdit.setTextColor(self.blackColor)
+        self.textEdit.insertPlainText(text)
+
+    def append_red_text(self, text):
+        self.textEdit.setTextColor(self.redColor)
+        self.textEdit.insertPlainText(text)
+
+    def append_blue_text(self, text):
+        self.textEdit.setTextColor(self.blueColor)
+        self.textEdit.insertPlainText(text)
+
+    def insert_input_text(self, text):
 
         results = self.crlf.split(text)
 
         color = 0
         for s in results:
             if color % 2:
-                self.textEdit.setTextColor(self.redColor)
                 if s == "\n":
                     s = "<LF>\n"
                 if s == "\r":
                     s = "<CR>\n"
+                if s == "\r\n":
+                    s = "<CR><LF>\n"
+                if s == "\n\r":
+                    s = "<LF><CR>\n"
+                self.append_red_text(s)
             else:
-                self.textEdit.setTextColor(self.blackColor)
+                self.append_black_text(s)
             color += 1
-
-            self.textEdit.insertPlainText(s)
 
     def insert_output_text(self, text):
 
-        self.textEdit.setTextColor(self.blueColor)
         results = self.crlf.split(text)
 
         color = 0
         for s in results:
             if color % 2:
-                self.textEdit.setTextColor(self.redColor)
                 if s == "\n\r":
                     s = "<LF><CR>\n"
                 if s == "\r\n":
@@ -51,8 +61,7 @@ class RichText():
                     s = "<LF>\n"
                 if s == "\r":
                     s = "<CR>\n"
+                self.append_red_text(s)
             else:
-                self.textEdit.setTextColor(self.blueColor)
+                self.append_blue_text(s)
             color += 1
-
-            self.textEdit.insertPlainText(s)
