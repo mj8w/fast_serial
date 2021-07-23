@@ -64,14 +64,6 @@ class SerialPort(QObject):
                 self.read_text.emit(f"{text}")
                 continue
 
-                buffer += text
-                pos = buffer.find("\n")
-                if pos > -1:
-                    printable = buffer[:pos]
-                    printable = printable.strip()
-                    info(f"{printable}")
-                    buffer = buffer[pos + 1:]
-
         except:
             traceback.print_exc()
         info(f"Exiting SerialPort")
