@@ -8,7 +8,7 @@ from PyQt5.Qt import QFontDatabase
 
 from ui.ui_application import Ui_MainWindow
 from lib.set import add_user_setting, window_size, actions, baud_rates, splitter_pos, baud_rate, com_port
-from lib.serial_port import SerialPort, Worker
+from lib.serial_port import SerialPort
 from lib.action_dialog import ActionDialog
 from lib.text import RichText
 

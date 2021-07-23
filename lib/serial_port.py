@@ -60,7 +60,7 @@ class SerialPort(QObject):
                     continue
 
                 text = btext.decode("ISO-8859-1")
-                print(text, end = "")
+                print(text.strip())
                 self.read_text.emit(f"{text}")
                 continue
 
