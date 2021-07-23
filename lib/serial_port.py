@@ -30,6 +30,7 @@ class SerialPort(QObject):
 
     def run(self):
         self.reader()
+
     def close(self):
         self.running = False
         if self.serial is None:
@@ -52,19 +53,24 @@ class SerialPort(QObject):
             while(self.running):
                 try:
                     btext = self.serial.read(100)
-                except (SerialException): # this can happen on serial close
+                except (SerialException, TypeError): # this can happen on serial close
                     continue
 
-                if len(btext):
-                    text = btext.decode()
-                    buffer += text
-                    pos = buffer.find("\n")
-                    if pos > -1:
-                        printable = buffer[:pos]
-                        printable = printable.strip()
-                        info(f"{printable}")
-                        self.read_text.emit(f"{printable}\n")
-                        buffer = buffer[pos + 1:]
+                if len(btext) == 0:
+                    continue
+
+                text = btext.decode("ISO-8859-1")
+                print(text, end = "")
+                self.read_text.emit(f"{text}")
+                continue
+
+                buffer += text
+                pos = buffer.find("\n")
+                if pos > -1:
+                    printable = buffer[:pos]
+                    printable = printable.strip()
+                    info(f"{printable}")
+                    buffer = buffer[pos + 1:]
 
         except:
             traceback.print_exc()
