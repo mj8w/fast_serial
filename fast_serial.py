@@ -3,7 +3,7 @@ from serial.tools import list_ports
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QListWidgetItem
 from PyQt5.QtGui import QFont
-from PyQt5.QtCore import QRect
+from PyQt5.QtCore import QThread, QRect
 from PyQt5.Qt import QFontDatabase
 
 from ui.ui_application import Ui_MainWindow
@@ -46,7 +46,7 @@ class MainWindow(QMainWindow):
         self.scrollbar = self.ui.comActivityEdit.verticalScrollBar()
         self.scrollbar.sliderReleased.connect(self.on_scroll)
         self.autoscroll = False
-        self.serial = SerialPort()
+        self.serial = None
 
         for action in actions:
             item = QListWidgetItem(action)
@@ -178,22 +178,32 @@ class MainWindow(QMainWindow):
             info(f"baud {baud}")
             info(f"comport {comport}")
             # try to open the serial port
-            if self.serial.open(comport, baud) == False:
+
+            self.thread = QThread()
+            self.serial = SerialPort()
+            if not self.serial.open(comport, baud_rate):
+                self.add_to_serial_output("NOT ABLE TO OPEN PORT")
                 return
+
+            self.serial.moveToThread(self.thread)
+
+            # connect signals
+            self.serial.connect_to_thread(self.thread)
+            self.serial.read_text.connect(self.add_to_serial_output)
+            self.serial.closed.connect(self.on_comport_off)
+
+            self.thread.start()
 
             self.ui.connectButton.setStyleSheet("background-color : lightblue")
 
             info(f"Port Opened")
             self.ui.comActivityEdit.setStyleSheet("border: 1px solid gray; background-color: white;")
 
-            # start collecting data in the background
-            self.serial.read_text.connect(self.add_to_serial_output)
-            self.serial.closed.connect(self.on_comport_off)
         else:
+            self.ui.connectButton.setEnabled(False) # temporarily until thread has completed
             self.ui.connectButton.setStyleSheet("background-color : lightgrey")
             self.serial.read_text.disconnect()
             self.serial.close()
-            self.on_comport_off()
 
     def add_to_serial_output(self, output):
         self.com_traffic.insert_input_text(output)
@@ -211,6 +221,7 @@ class MainWindow(QMainWindow):
 
     def on_comport_off(self):
         info(f"comport is OFF")
+        self.ui.connectButton.setEnabled(True)
         self.ui.comActivityEdit.setStyleSheet("border: 1px solid white; background-color: beige;")
 
     def closeEvent(self, event):
