@@ -200,10 +200,10 @@ class MainWindow(QMainWindow):
             self.ui.comActivityEdit.setStyleSheet("border: 1px solid gray; background-color: white;")
 
         else:
+            self.ui.connectButton.setEnabled(False) # temporarily until thread has completed
             self.ui.connectButton.setStyleSheet("background-color : lightgrey")
             self.serial.read_text.disconnect()
             self.serial.close()
-            self.on_comport_off()
 
     def add_to_serial_output(self, output):
         self.com_traffic.insert_input_text(output)
@@ -221,6 +221,7 @@ class MainWindow(QMainWindow):
 
     def on_comport_off(self):
         info(f"comport is OFF")
+        self.ui.connectButton.setEnabled(True)
         self.ui.comActivityEdit.setStyleSheet("border: 1px solid white; background-color: beige;")
 
     def closeEvent(self, event):
