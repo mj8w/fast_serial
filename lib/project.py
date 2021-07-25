@@ -1,8 +1,13 @@
+"""
+Copyright 2021 Micheal Wilson
+Fast_serial project founded by Micheal Wilson
+"""
+
 import sys
 from os.path import abspath, dirname
 
 this_dir = abspath(dirname(__file__)) # should be lib directory
-base_dir = abspath(f"{this_dir}\\..") 
+base_dir = abspath(f"{this_dir}\\..")
 
 import logging
 from logging import config as logging_config
