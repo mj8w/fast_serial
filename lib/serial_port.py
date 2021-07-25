@@ -53,7 +53,6 @@ class SerialPort(QObject):
         """Read serial port task."""
         info(f"SerialPort.run()")
         self.running = True
-        buffer = "" # buffer for logging the resulting text line by line
         try:
             while(self.running):
                 try:
@@ -73,3 +72,4 @@ class SerialPort(QObject):
             traceback.print_exc()
         info(f"Exiting SerialPort")
         self.closed.emit()
+
