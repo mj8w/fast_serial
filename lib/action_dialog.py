@@ -1,3 +1,8 @@
+"""
+Copyright 2021 Micheal Wilson
+Fast_serial project founded by Micheal Wilson
+"""
+
 from PyQt5.QtWidgets import QDialog
 
 from ui.ui_action_dialog import Ui_Dialog

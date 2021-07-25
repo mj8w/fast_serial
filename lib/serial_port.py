@@ -1,3 +1,8 @@
+"""
+Copyright 2021 Micheal Wilson
+Fast_serial project founded by Micheal Wilson
+"""
+
 import traceback
 from serial import Serial, SerialException
 from PyQt5.QtCore import QObject, pyqtSignal

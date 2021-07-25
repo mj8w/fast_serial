@@ -1,3 +1,8 @@
+"""
+Copyright 2021 Micheal Wilson
+Fast_serial project founded by Micheal Wilson
+"""
+
 import re
 
 from lib.project import logset, base_dir
