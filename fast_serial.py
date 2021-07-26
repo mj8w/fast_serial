@@ -69,7 +69,8 @@ class MainWindow(QMainWindow):
         font_db.addApplicationFont("ui\\resource\\source-code-pro\\SourceCodePro-Regular.ttf")
         font = QFont("Source Code Pro", 9)
         self.ui.comActivityEdit.setCurrentFont(font)
-        self.ui.comActivityEdit.setDisabled(True)
+        self.ui.comActivityEdit.setReadOnly(True)
+        self.ui.comActivityEdit.selectionChanged.connect(self.on_activity_selected)
 
         self.com_traffic = RichText(self.ui.comActivityEdit)
 
@@ -93,6 +94,12 @@ class MainWindow(QMainWindow):
         self.history = History()
         self.ui.sendLineEdit.returnPressed.connect(self.on_send)
         self.ui.sendLineEdit.installEventFilter(self)   # this causes eventFilter() to be called on key presses
+
+    def on_activity_selected(self):
+        cursor = self.ui.comActivityEdit.textCursor()
+        cursor.clearSelection()
+        cursor.movePosition(QTextCursor.End)
+        self.ui.comActivityEdit.setTextCursor(cursor)
 
     def on_send(self):
         text = self.ui.sendLineEdit.text()
@@ -207,7 +214,7 @@ class MainWindow(QMainWindow):
 
     def on_connect_clicked(self):
         if self.ui.connectButton.isChecked():
-            self.ui.comActivityEdit.setDisabled(True)
+            self.ui.comActivityEdit.setReadOnly(True)
             cursor = self.ui.comActivityEdit.textCursor()
             cursor.clearSelection()
             cursor.movePosition(QTextCursor.End)
@@ -241,7 +248,7 @@ class MainWindow(QMainWindow):
         else:
             self.ui.connectButton.setEnabled(False) # temporarily until thread has completed
             self.ui.connectButton.setStyleSheet("background-color : lightgrey")
-            self.ui.comActivityEdit.setDisabled(False)
+            self.ui.comActivityEdit.setReadOnly(False)
             self.serial.read_text.disconnect()
             self.serial.close()
 
