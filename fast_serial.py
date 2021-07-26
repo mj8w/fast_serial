@@ -9,7 +9,7 @@ from serial.tools import list_ports
 from PyQt5.QtWidgets import QApplication, QMainWindow, QListWidgetItem
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import QThread, QRect, QEvent, Qt
-from PyQt5.Qt import QFontDatabase
+from PyQt5.Qt import QFontDatabase, QTextCursor
 
 from ui.ui_application import Ui_MainWindow
 from lib.set import add_user_setting, window_size, actions, baud_rates, splitter_pos, baud_rate, com_port
@@ -69,6 +69,8 @@ class MainWindow(QMainWindow):
         font_db.addApplicationFont("ui\\resource\\source-code-pro\\SourceCodePro-Regular.ttf")
         font = QFont("Source Code Pro", 9)
         self.ui.comActivityEdit.setCurrentFont(font)
+        self.ui.comActivityEdit.setDisabled(True)
+
         self.com_traffic = RichText(self.ui.comActivityEdit)
 
         self.ui.baudCBox.addItems(baud_rates)
@@ -205,6 +207,11 @@ class MainWindow(QMainWindow):
 
     def on_connect_clicked(self):
         if self.ui.connectButton.isChecked():
+            self.ui.comActivityEdit.setDisabled(True)
+            cursor = self.ui.comActivityEdit.textCursor()
+            cursor.clearSelection()
+            cursor.movePosition(QTextCursor.End)
+            self.ui.comActivityEdit.setTextCursor(cursor)
             baud = self.ui.baudCBox.currentText()
             comport = self.ui.portCBox.currentText()
             info(f"baud {baud}")
@@ -234,6 +241,7 @@ class MainWindow(QMainWindow):
         else:
             self.ui.connectButton.setEnabled(False) # temporarily until thread has completed
             self.ui.connectButton.setStyleSheet("background-color : lightgrey")
+            self.ui.comActivityEdit.setDisabled(False)
             self.serial.read_text.disconnect()
             self.serial.close()
 
