@@ -8,7 +8,7 @@ from serial.tools import list_ports
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QListWidgetItem
 from PyQt5.QtGui import QFont
-from PyQt5.QtCore import QThread, QRect
+from PyQt5.QtCore import QThread, QRect, QEvent, Qt
 from PyQt5.Qt import QFontDatabase
 
 from ui.ui_application import Ui_MainWindow
@@ -87,6 +87,16 @@ class MainWindow(QMainWindow):
         self.ui.editButton.setEnabled(False)
         self.ui.removeButton.setEnabled(False)
 
+        self.history = History()
+        self.ui.sendLineEdit.returnPressed.connect(self.on_send)
+        self.ui.sendLineEdit.installEventFilter(self)   # this causes eventFilter() to be called on key presses
+
+    def on_send(self):
+        text = self.ui.sendLineEdit.text()
+        if self.serial != None:
+            self.serial.write(text + "\r\n")
+            self.com_traffic.insert_output_text(text + "\r\n")
+        self.ui.sendLineEdit.setText("")
     def on_clear_clicked(self):
         self.ui.comActivityEdit.clear()
 
