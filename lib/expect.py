@@ -77,10 +77,15 @@ class Expect():
         raise NotFound(self.build_data)
 
     def wait(self, timeout = 1):
-        """ wait for the specified time to elapse, ignore the incoming text. """
+        """ wait for the specified time to elapse, ignore the incoming text. Return the text that arrived during the wait. """
         self.start_timer()
+        self.clear()
+
+        # absorb the block.releases as data arrives
         while self.time_left(timeout) > 0:
             self.block.acquire(True, self.time_left(timeout)) # block until some data arrives
-
+        with self.mutex:
+            text = self.incoming_data
         self.clear()
+        return text
 

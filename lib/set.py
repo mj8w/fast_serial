@@ -20,6 +20,7 @@ values = {
     'window_size':(167, 118, 1262, 367),
     'baud_rate':'115200',
     'com_port':'COM10',
+    'send_history': [],
 }
 
 def rewrite_settings_file(new_values = {}):
@@ -49,15 +50,16 @@ def add_user_setting(variable, value):
             f.write(line)
 
 try:
-    from settings import baud_rates, splitter_pos, window_size, actions, baud_rate, com_port
+    from settings import baud_rates, splitter_pos, window_size, actions, baud_rate, com_port, send_history
 except:
     rewrite_settings_file()
     baud_rates = ['1200', '2400', '4800', '9600', '19200', '38400', '57600', '115200']
     splitter_pos = [0, 258]
     window_size = (167, 118, 1262, 367)
-    actions = {'help':'help<cr><lf>', 'rx_list':'rx_list<cr><lf>'}
+    actions = {'help':'help<cr><lf>'}
     baud_rate = '115200'
     com_port = 'COM3'
+    send_history = []
 
-_ = (window_size, splitter_pos, actions, baud_rates, baud_rate, com_port)
+_ = (window_size, splitter_pos, actions, baud_rates, baud_rate, com_port, send_history)
 
