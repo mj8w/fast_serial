@@ -16,6 +16,7 @@ from lib.set import add_user_setting, window_size, actions, baud_rates, splitter
 from lib.serial_port import SerialPort
 from lib.action_dialog import ActionDialog
 from lib.text import RichText
+from lib.history import History
 
 from lib.project import logset
 debug, info, warn, err = logset('app')
@@ -93,10 +94,26 @@ class MainWindow(QMainWindow):
 
     def on_send(self):
         text = self.ui.sendLineEdit.text()
+        self.history.add(text)
         if self.serial != None:
             self.serial.write(text + "\r\n")
             self.com_traffic.insert_output_text(text + "\r\n")
         self.ui.sendLineEdit.setText("")
+
+    def eventFilter(self, source, event):
+        """ Detect up/down arrow in the send widget """
+        if (event.type() == QEvent.KeyPress and source is self.ui.sendLineEdit):
+            if event.key() == Qt.Key_Up:
+                text = self.history.up()
+                if text != "":
+                    self.ui.sendLineEdit.setText(text)
+            elif event.key() == Qt.Key_Down:
+                text = self.history.down()
+                if text != "":
+                    self.ui.sendLineEdit.setText(text)
+
+        return super(MainWindow, self).eventFilter(source, event)
+
     def on_clear_clicked(self):
         self.ui.comActivityEdit.clear()
 
@@ -244,7 +261,8 @@ class MainWindow(QMainWindow):
         info(f"save geometry as {geometry}")
         add_user_setting('window_size', geometry)
 
-        self.serial.close()
+        if self.serial != None:
+            self.serial.close()
         event.accept()
 
 if __name__ == "__main__":
