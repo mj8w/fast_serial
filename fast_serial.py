@@ -65,10 +65,8 @@ class MainWindow(QMainWindow):
         self.ui.editButton.clicked.connect(self.on_edit)
         self.ui.removeButton.clicked.connect(self.on_remove)
 
-        font_db = QFontDatabase()
-        font_db.addApplicationFont("ui\\resource\\source-code-pro\\SourceCodePro-Regular.ttf")
-        font = QFont("Source Code Pro", 9)
-        self.ui.comActivityEdit.setCurrentFont(font)
+        font_result = QFontDatabase.addApplicationFont("ui\\resources\\source-code-pro\\SourceCodePro-Regular.ttf")
+        self.ui.comActivityEdit.setFont(QFont("Source Code Pro", 9))
         self.ui.comActivityEdit.setReadOnly(True)
         self.ui.comActivityEdit.selectionChanged.connect(self.on_activity_selected)
 
