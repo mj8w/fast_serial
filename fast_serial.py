@@ -151,7 +151,7 @@ class MainWindow(QMainWindow):
             return
 
         ''' Translate the action script into text to send '''
-        replacement = {"<cr>":"\r", "<lf>":"\n"}
+        replacement = {"<cr>":"\r", "<lf>":"\n", "<CR>":"\r", "<LF>":"\n"}
         action = item.action
         for r in replacement:
             action = action.replace(r, replacement[r])
