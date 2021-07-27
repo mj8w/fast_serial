@@ -94,10 +94,12 @@ class MainWindow(QMainWindow):
         self.ui.sendLineEdit.installEventFilter(self)   # this causes eventFilter() to be called on key presses
 
     def on_activity_selected(self):
+        self.ui.comActivityEdit.selectionChanged.disconnect()
         cursor = self.ui.comActivityEdit.textCursor()
         cursor.clearSelection()
         cursor.movePosition(QTextCursor.End)
         self.ui.comActivityEdit.setTextCursor(cursor)
+        self.ui.comActivityEdit.selectionChanged.connect(self.on_activity_selected)
 
     def on_send(self):
         text = self.ui.sendLineEdit.text()
@@ -212,6 +214,7 @@ class MainWindow(QMainWindow):
 
     def on_connect_clicked(self):
         if self.ui.connectButton.isChecked():
+            self.ui.comActivityEdit.selectionChanged.connect(self.on_activity_selected)
             self.ui.comActivityEdit.setReadOnly(True)
             cursor = self.ui.comActivityEdit.textCursor()
             cursor.clearSelection()
@@ -244,6 +247,7 @@ class MainWindow(QMainWindow):
             self.ui.comActivityEdit.setStyleSheet("border: 1px solid gray; background-color: white;")
 
         else:
+            self.ui.comActivityEdit.selectionChanged.disconnect()
             self.ui.connectButton.setEnabled(False) # temporarily until thread has completed
             self.ui.connectButton.setStyleSheet("background-color : lightgrey")
             self.ui.comActivityEdit.setReadOnly(False)
