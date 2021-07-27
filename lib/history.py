@@ -19,7 +19,9 @@ class History():
         if text == "":
             return
 
-        if text != self.history[-1]:
+        if not len(self.history):
+            self.history.append(text)
+        elif text != self.history[-1]:
             self.history.append(text)
 
         limit = 50 # who will scroll up 50 entries?
