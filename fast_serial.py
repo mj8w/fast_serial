@@ -65,10 +65,8 @@ class MainWindow(QMainWindow):
         self.ui.editButton.clicked.connect(self.on_edit)
         self.ui.removeButton.clicked.connect(self.on_remove)
 
-        font_db = QFontDatabase()
-        font_db.addApplicationFont("ui\\resource\\source-code-pro\\SourceCodePro-Regular.ttf")
-        font = QFont("Source Code Pro", 9)
-        self.ui.comActivityEdit.setCurrentFont(font)
+        font_result = QFontDatabase.addApplicationFont("ui\\resources\\source-code-pro\\SourceCodePro-Regular.ttf")
+        self.ui.comActivityEdit.setFont(QFont("Source Code Pro", 9))
         self.ui.comActivityEdit.setReadOnly(True)
         self.ui.comActivityEdit.selectionChanged.connect(self.on_activity_selected)
 
@@ -96,10 +94,12 @@ class MainWindow(QMainWindow):
         self.ui.sendLineEdit.installEventFilter(self)   # this causes eventFilter() to be called on key presses
 
     def on_activity_selected(self):
+        self.ui.comActivityEdit.selectionChanged.disconnect()
         cursor = self.ui.comActivityEdit.textCursor()
         cursor.clearSelection()
         cursor.movePosition(QTextCursor.End)
         self.ui.comActivityEdit.setTextCursor(cursor)
+        self.ui.comActivityEdit.selectionChanged.connect(self.on_activity_selected)
 
     def on_send(self):
         text = self.ui.sendLineEdit.text()
@@ -153,7 +153,7 @@ class MainWindow(QMainWindow):
             return
 
         ''' Translate the action script into text to send '''
-        replacement = {"<cr>":"\r", "<lf>":"\n"}
+        replacement = {"<cr>":"\r", "<lf>":"\n", "<CR>":"\r", "<LF>":"\n"}
         action = item.action
         for r in replacement:
             action = action.replace(r, replacement[r])
@@ -214,6 +214,7 @@ class MainWindow(QMainWindow):
 
     def on_connect_clicked(self):
         if self.ui.connectButton.isChecked():
+            self.ui.comActivityEdit.selectionChanged.connect(self.on_activity_selected)
             self.ui.comActivityEdit.setReadOnly(True)
             cursor = self.ui.comActivityEdit.textCursor()
             cursor.clearSelection()
@@ -246,6 +247,7 @@ class MainWindow(QMainWindow):
             self.ui.comActivityEdit.setStyleSheet("border: 1px solid gray; background-color: white;")
 
         else:
+            self.ui.comActivityEdit.selectionChanged.disconnect()
             self.ui.connectButton.setEnabled(False) # temporarily until thread has completed
             self.ui.connectButton.setStyleSheet("background-color : lightgrey")
             self.ui.comActivityEdit.setReadOnly(False)
