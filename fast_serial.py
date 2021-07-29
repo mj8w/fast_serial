@@ -131,8 +131,9 @@ class MainWindow(QMainWindow):
         text = self.ui.sendLineEdit.text()
         self.history.add(text)
         if self.serial != None:
-            self.serial.write(text + "\r\n")
-            self.com_traffic.write(text + "\r\n")
+            self.serial.write(text + "\n")
+            self.com_traffic.write(text + "\n")
+            self.serial.log(text)
         self.ui.sendLineEdit.setText("")
 
     def eventFilter(self, source, event):
