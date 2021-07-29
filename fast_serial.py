@@ -65,6 +65,9 @@ class MainWindow(QMainWindow):
         self.ui.editButton.clicked.connect(self.on_edit)
         self.ui.removeButton.clicked.connect(self.on_remove)
 
+        self.ui.upButton.clicked.connect(self.on_list_up)
+        self.ui.downButton.clicked.connect(self.on_list_down)
+
         font_result = QFontDatabase.addApplicationFont("ui\\resources\\source-code-pro\\SourceCodePro-Regular.ttf")
         self.ui.comActivityEdit.setFont(QFont("Source Code Pro", 9))
         self.ui.comActivityEdit.setReadOnly(True)
@@ -88,10 +91,31 @@ class MainWindow(QMainWindow):
 
         self.ui.editButton.setEnabled(False)
         self.ui.removeButton.setEnabled(False)
+        self.ui.upButton.setEnabled(False)
+        self.ui.downButton.setEnabled(False)
 
         self.history = History()
         self.ui.sendLineEdit.returnPressed.connect(self.on_send)
         self.ui.sendLineEdit.installEventFilter(self)   # this causes eventFilter() to be called on key presses
+
+    def on_list_up(self):
+        row = self.ui.actionList.currentRow()
+        currentItem = self.ui.actionList.takeItem(row)
+        new_row = row - 1
+        self.ui.actionList.insertItem(new_row, currentItem)
+        self.ui.actionList.setCurrentRow(new_row);
+        self.ui.upButton.setEnabled(new_row != 0)
+        self.ui.downButton.setEnabled(True)
+
+    def on_list_down(self):
+        row = self.ui.actionList.currentRow()
+        currentItem = self.ui.actionList.takeItem(row)
+        new_row = row + 1
+        self.ui.actionList.insertItem(new_row, currentItem)
+        self.ui.actionList.setCurrentRow(new_row);
+        maxr = self.ui.actionList.count() - 1
+        self.ui.downButton.setEnabled(new_row != maxr)
+        self.ui.upButton.setEnabled(True)
 
     def on_activity_selected(self):
         self.ui.comActivityEdit.selectionChanged.disconnect()
@@ -111,7 +135,10 @@ class MainWindow(QMainWindow):
 
     def eventFilter(self, source, event):
         """ Detect up/down arrow in the send widget """
-        if (event.type() == QEvent.KeyPress and source is self.ui.sendLineEdit):
+        if event.type() != QEvent.KeyPress:
+            return super(MainWindow, self).eventFilter(source, event)
+
+        if source is self.ui.sendLineEdit:
             if event.key() == Qt.Key_Up:
                 text = self.history.up()
                 if text != "":
@@ -120,7 +147,6 @@ class MainWindow(QMainWindow):
                 text = self.history.down()
                 if text != "":
                     self.ui.sendLineEdit.setText(text)
-
         return super(MainWindow, self).eventFilter(source, event)
 
     def on_clear_clicked(self):
@@ -165,6 +191,11 @@ class MainWindow(QMainWindow):
         info(f"clicked {item.text()}, {item.action}")
         self.ui.editButton.setEnabled(True) # enable once a row is selected
         self.ui.removeButton.setEnabled(True)
+
+        row = self.ui.actionList.currentRow()
+        maxr = self.ui.actionList.count() - 1
+        self.ui.upButton.setEnabled(row != 0)
+        self.ui.downButton.setEnabled(row != maxr)
 
     def on_add(self):
         info(f"clicked Add Button")
