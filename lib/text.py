@@ -51,7 +51,7 @@ class RichText():
                 self.append_black_text(s)
             color += 1
 
-    def insert_output_text(self, text):
+    def write(self, text):
 
         results = self.crlf.split(text)
 

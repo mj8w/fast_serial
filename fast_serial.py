@@ -4,6 +4,7 @@ Fast_serial project founded by Micheal Wilson
 """
 
 import sys
+import re
 from serial.tools import list_ports
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QListWidgetItem
@@ -17,6 +18,10 @@ from lib.serial_port import SerialPort
 from lib.action_dialog import ActionDialog
 from lib.text import RichText
 from lib.history import History
+try:
+    import scripts # @UnresolvedImport
+except ModuleNotFoundError:
+    scripts = None
 
 from lib.project import logset
 debug, info, warn, err = logset('app')
@@ -68,7 +73,7 @@ class MainWindow(QMainWindow):
         self.ui.upButton.clicked.connect(self.on_list_up)
         self.ui.downButton.clicked.connect(self.on_list_down)
 
-        font_result = QFontDatabase.addApplicationFont("ui\\resources\\source-code-pro\\SourceCodePro-Regular.ttf")
+        QFontDatabase.addApplicationFont("ui\\resources\\source-code-pro\\SourceCodePro-Regular.ttf")
         self.ui.comActivityEdit.setFont(QFont("Source Code Pro", 9))
         self.ui.comActivityEdit.setReadOnly(True)
         self.ui.comActivityEdit.selectionChanged.connect(self.on_activity_selected)
@@ -130,7 +135,7 @@ class MainWindow(QMainWindow):
         self.history.add(text)
         if self.serial != None:
             self.serial.write(text + "\r\n")
-            self.com_traffic.insert_output_text(text + "\r\n")
+            self.com_traffic.write(text + "\r\n")
         self.ui.sendLineEdit.setText("")
 
     def eventFilter(self, source, event):
@@ -184,8 +189,18 @@ class MainWindow(QMainWindow):
         for r in replacement:
             action = action.replace(r, replacement[r])
 
+        # check for "run script" directive
+        mrun = re.match("<run\s*\((.*)\)>", action)
+        if mrun:
+            if scripts == None:
+                self.com_traffic.append_blue_text(f"Scripts.py not found to {mrun.group(0)}\n")
+                return
+            script = mrun.group(1)
+            getattr(scripts, script)(self.serial, self.com_traffic)
+            return
+
         self.serial.write(action)
-        self.com_traffic.insert_output_text(action)
+        self.com_traffic.write(action)
 
     def on_clicked_item(self, item):
         info(f"clicked {item.text()}, {item.action}")
