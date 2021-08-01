@@ -18,9 +18,9 @@ class SerialPort(QObject):
         super(SerialPort, self).__init__()
         self.serial = None
         self.running = False
+        self.buffer = ""
 
     def open(self, comport, baud_rate):
-        info(f"SerialPort.open()")
         try:
             self.serial = Serial(comport, baud_rate, timeout = 0.015)
             return True
@@ -51,7 +51,6 @@ class SerialPort(QObject):
 
     def reader(self):
         """Read serial port task."""
-        info(f"SerialPort.run()")
         self.running = True
         try:
             while(self.running):
@@ -64,12 +63,25 @@ class SerialPort(QObject):
                     continue
 
                 text = btext.decode("ISO-8859-1")
-                print(text.strip())
                 self.read_text.emit(f"{text}")
                 continue
 
         except:
             traceback.print_exc()
-        info(f"Exiting SerialPort")
         self.closed.emit()
 
+    def log(self, text):
+        self.buffer += text
+
+        for i in range(0, len(self.buffer)):
+            try:
+                if self.buffer[i] == "\r" or self.buffer[i] == "\n":
+                    info(self.buffer[:i])
+                    if self.buffer[i + 1] == "\r" or self.buffer[i + 1] == "\n":
+                        self.buffer = self.buffer[i + 2:]
+                    else:
+                        self.buffer = self.buffer[i + 1:]
+                    if len(self.buffer):
+                        self.log("")
+            except IndexError:
+                break

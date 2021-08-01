@@ -56,9 +56,10 @@ class MainWindow(QMainWindow):
         self.autoscroll = False
         self.serial = None
 
-        for action in actions:
-            item = QListWidgetItem(action)
-            item.action = actions[action]
+        for element in actions:
+            name, action = element
+            item = QListWidgetItem(name)
+            item.action = action
             self.ui.actionList.addItem(item)
 
         self.ui.actionList.itemDoubleClicked.connect(self.on_dclicked_item)
@@ -100,6 +101,8 @@ class MainWindow(QMainWindow):
         self.ui.sendLineEdit.returnPressed.connect(self.on_send)
         self.ui.sendLineEdit.installEventFilter(self)   # this causes eventFilter() to be called on key presses
 
+        self.autoscroll = True
+
     def on_list_up(self):
         row = self.ui.actionList.currentRow()
         currentItem = self.ui.actionList.takeItem(row)
@@ -108,6 +111,7 @@ class MainWindow(QMainWindow):
         self.ui.actionList.setCurrentRow(new_row);
         self.ui.upButton.setEnabled(new_row != 0)
         self.ui.downButton.setEnabled(True)
+        self.save_actions()
 
     def on_list_down(self):
         row = self.ui.actionList.currentRow()
@@ -118,6 +122,7 @@ class MainWindow(QMainWindow):
         maxr = self.ui.actionList.count() - 1
         self.ui.downButton.setEnabled(new_row != maxr)
         self.ui.upButton.setEnabled(True)
+        self.save_actions()
 
     def on_activity_selected(self):
         self.ui.comActivityEdit.selectionChanged.disconnect()
@@ -131,8 +136,9 @@ class MainWindow(QMainWindow):
         text = self.ui.sendLineEdit.text()
         self.history.add(text)
         if self.serial != None:
-            self.serial.write(text + "\r\n")
-            self.com_traffic.write(text + "\r\n")
+            self.serial.write(text + "\n")
+            self.com_traffic.write(text + "\n")
+            self.serial.log(text)
         self.ui.sendLineEdit.setText("")
 
     def eventFilter(self, source, event):
@@ -210,8 +216,15 @@ class MainWindow(QMainWindow):
         item = QListWidgetItem(ActionDialog.name)
         item.action = ActionDialog.action
         self.ui.actionList.addItem(item)
+        self.save_actions()
 
-        actions.update({ActionDialog.name:ActionDialog.action})
+    def save_actions(self):
+        actions = []
+        for i in range(self.ui.actionList.count()):
+            item = self.ui.actionList.item(i)
+            name = item.text()
+            action = item.action
+            actions.append((name, action))
         add_user_setting('actions', actions)
 
     def on_edit(self):
@@ -229,13 +242,12 @@ class MainWindow(QMainWindow):
         item.setText(ActionDialog.name)
         item.action = ActionDialog.action
 
-        actions.update({ActionDialog.name:ActionDialog.action})
-        add_user_setting('actions', actions)
+        self.save_actions()
 
     def on_remove(self):
         item = self.ui.actionList.currentItem()
-        actions.pop(item.text())
-        add_user_setting('actions', actions)
+        actions.remove((item.text(), item.action))
+        self.save_actions()
 
         row = self.ui.actionList.currentRow()
         self.ui.actionList.takeItem(row)
@@ -284,6 +296,7 @@ class MainWindow(QMainWindow):
 
     def add_to_serial_output(self, output):
         self.com_traffic.insert_input_text(output)
+        self.serial.log(output)
 
         # auto scroll to end
         if self.autoscroll:
