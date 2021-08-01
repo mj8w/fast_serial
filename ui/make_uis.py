@@ -6,7 +6,8 @@ app = "c:\\Apps\\Anaconda\\envs\\py38\\Scripts\\pyuic5.exe"
 files = [
     "application",
     "setup",
-    "action_dialog"
+    "action_dialog",
+    "run_dialog"
     ]
 
 def main():

@@ -4,7 +4,7 @@ Fast_serial project founded by Micheal Wilson
 """
 
 import sys
-import re
+
 from serial.tools import list_ports
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QListWidgetItem
@@ -18,10 +18,7 @@ from lib.serial_port import SerialPort
 from lib.action_dialog import ActionDialog
 from lib.text import RichText
 from lib.history import History
-try:
-    import scripts # @UnresolvedImport
-except ModuleNotFoundError:
-    scripts = None
+from lib.actions import RunContext
 
 from lib.project import logset
 debug, info, warn, err = logset('app')
@@ -183,24 +180,9 @@ class MainWindow(QMainWindow):
         if not self.ui.connectButton.isChecked():
             return
 
-        ''' Translate the action script into text to send '''
-        replacement = {"<cr>":"\r", "<lf>":"\n", "<CR>":"\r", "<LF>":"\n"}
-        action = item.action
-        for r in replacement:
-            action = action.replace(r, replacement[r])
-
-        # check for "run script" directive
-        mrun = re.match("<run\s*\((.*)\)>", action)
-        if mrun:
-            if scripts == None:
-                self.com_traffic.append_blue_text(f"Scripts.py not found to {mrun.group(0)}\n")
-                return
-            script = mrun.group(1)
-            getattr(scripts, script)(self.serial, self.com_traffic)
-            return
-
-        self.serial.write(action)
-        self.com_traffic.write(action)
+        # create a context - everything needed to run an action
+        context = RunContext(self, item)
+        context.perform_action()
 
     def on_clicked_item(self, item):
         info(f"clicked {item.text()}, {item.action}")
