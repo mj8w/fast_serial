@@ -25,7 +25,8 @@ class RunContext():
 
         self.action = list_widget_item.action
         for r in replacement:
-            self.action = re.sub(r, replacement[r], self.action, re.IGNORECASE)
+            replace = re.compile(r, re.IGNORECASE)
+            self.action = replace.sub(replacement[r], self.action)
 
         # check for "run script" directive
         mrun = re.match("<run\s*\((.*)\)>", self.action, re.IGNORECASE)
@@ -50,7 +51,7 @@ class RunContext():
 
         self.dialog = RunActionDialog(self.parent, self.name)
         self.dialog.start()
-        run_thread = Thread(target = self.update_mode_thread)
+        run_thread = Thread(target=self.update_mode_thread)
         run_thread.daemon = True
         run_thread.start()
 
