@@ -188,6 +188,7 @@ class MainWindow(QMainWindow):
 
         # create a context - everything needed to run an action
         context = RunContext(self, item)
+        self.serial.read_text.connect(context.enter_incoming_data)
         context.perform_action()
 
     def on_clicked_item(self, item):

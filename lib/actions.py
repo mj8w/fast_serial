@@ -5,17 +5,19 @@ Fast_serial project founded by Micheal Wilson
 import re
 from threading import Thread
 from ui.run_action import RunActionDialog
+from lib.expect import Expect, NotFound
 try:
     import scripts # @UnresolvedImport
 except ModuleNotFoundError:
     scripts = None
 
-class RunContext():
+class RunContext(Expect):
     """ Object contains everything that an action script can use to interact with the rest of
         the program
     """
 
     def __init__(self, parent, list_widget_item):
+        super(RunContext, self).__init__()
         self.serial = parent.serial
         self.terminal = parent.com_traffic
         self.script = None
@@ -35,6 +37,9 @@ class RunContext():
                 return
             self.script = mrun.group(1)
         self.name = list_widget_item.text()
+
+    def write(self, text):
+        self.serial.write(text)
 
     def perform_action(self):
         ''' Perform the action in the action list item '''
@@ -59,6 +64,12 @@ class RunContext():
 
     def update_mode_thread(self):
         """ Thread which runs the action script. """
-        getattr(scripts, self.script)(self.serial, self.terminal, self.dialog)
+        try:
+            getattr(scripts, self.script)(self)
+        except NotFound as nf:
+            self.terminal.append_red_text(f"Found '{nf.found}' instead of '{nf.searching_for}'\r\n")
+
+        # notify the dialog that the script is complete in case the script
+        # doesn't already do that
         self.dialog.percent_complete = 100
 

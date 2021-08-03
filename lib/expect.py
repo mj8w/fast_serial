@@ -66,7 +66,8 @@ class Expect():
             self.block.acquire(True, self.time_left(timeout)) # block until some data arrives
             while index < self.data_len(): # this gets updated as new data arrives if it does while processing
                 with self.mutex:
-                    matched = compare.match(self.incoming_data[0:index])
+                    to_compare = self.incoming_data[0:index]
+                    matched = compare.search(to_compare)
                 if matched:
                     with self.mutex:
                         self.incoming_data = self.incoming_data[index:] # eat up the text that was found from the buffer
@@ -74,7 +75,7 @@ class Expect():
                         self.block.release() # release whenever we have data to process (for next call of expect())
                     return matched.group(0)
                 index += 1
-        raise NotFound(self.build_data)
+        raise NotFound(self.incoming_data, re_compare)
 
     def wait(self, timeout = 1):
         """ wait for the specified time to elapse, ignore the incoming text. Return the text that arrived during the wait. """

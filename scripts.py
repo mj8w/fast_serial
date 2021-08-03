@@ -12,13 +12,22 @@ Fast_serial project founded by Micheal Wilson
 import time
 
 # See the terminal commands possible in lib/text.py
-def hellow_world(serial, terminal, dialog):
+def hellow_world(context):
     """ Print Hello World! to monitor """
 
     for x in range(10):
-        if not dialog.running:
+        if not context.dialog.running:
             return
-        dialog.percent_complete = x * 10
-        terminal.append_blue_text("Hello World\n")
-        serial.write("\r\n")
+        context.dialog.percent_complete = x * 10
+        context.terminal.append_blue_text("Hello World\n")
+        context.write("\r\n")
         time.sleep(1)
+
+def expect_DEBUG_msgs(context):
+
+    for x in range(10):
+        if not context.dialog.running:
+            return
+        context.dialog.percent_complete = x * 10
+
+        context.expect("DEBUG")
