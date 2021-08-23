@@ -62,26 +62,28 @@ class SerialPort(QObject):
                 if len(btext) == 0:
                     continue
 
-                text = btext.decode("ISO-8859-1")
-                self.read_text.emit(f"{text}")
-                continue
+                self.buffer += btext.decode("ISO-8859-1")
 
+                i = 0
+                while 1:
+                    try:
+                        ch = self.buffer[i]
+                    except IndexError:
+                        break
+                    if ch == '\r' or ch == '\n': # reached end-of-line
+                        ch2 = self.buffer[i + 1]
+                        info(f"{self.buffer[:i]}")
+                        if ch2 == '\r' or ch2 == '\n' and ch != ch2: # end-of-line is 2 characters terminator
+                            line = self.buffer[:i + 2]
+                            self.buffer = self.buffer[i + 2:]
+                        else:
+                            line = self.buffer[:i + 1]
+                            self.buffer = self.buffer[i + 1:]
+                        self.read_text.emit(f"{line}")
+                        i = 0
+                    else:
+                        i += 1
         except:
             traceback.print_exc()
         self.closed.emit()
 
-    def log(self, text):
-        self.buffer += text
-
-        for i in range(0, len(self.buffer)):
-            try:
-                if self.buffer[i] == "\r" or self.buffer[i] == "\n":
-                    info(self.buffer[:i])
-                    if self.buffer[i + 1] == "\r" or self.buffer[i + 1] == "\n":
-                        self.buffer = self.buffer[i + 2:]
-                    else:
-                        self.buffer = self.buffer[i + 1:]
-                    if len(self.buffer):
-                        self.log("")
-            except IndexError:
-                break
