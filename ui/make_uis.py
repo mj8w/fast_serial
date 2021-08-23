@@ -7,6 +7,7 @@ files = [
     "application",
     "setup",
     "action_dialog",
+    "filter_dialog",
     "run_dialog"
     ]
 

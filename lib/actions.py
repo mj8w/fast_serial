@@ -4,11 +4,135 @@ Fast_serial project founded by Micheal Wilson
 """
 import re
 from threading import Thread
+
+from PyQt5.QtWidgets import QListWidgetItem
+from lib.set import add_user_setting, actions
+
 from ui.run_action import RunActionDialog
+from lib.dialogs import ActionDialog
 try:
     import scripts # @UnresolvedImport
 except ModuleNotFoundError:
     scripts = None
+
+from lib.project import logset
+debug, info, warn, err = logset('app')
+
+class ActionUi():
+    """ Part of the MainWindow """
+
+    def init_action_elements(self):
+
+        for element in actions:
+            name, action = element
+            item = QListWidgetItem(name)
+            item.action = action
+            self.ui.actionList.addItem(item)
+
+        self.ui.actionList.itemDoubleClicked.connect(self.on_actions_dclicked_item)
+        self.ui.actionList.itemClicked.connect(self.on_actions_clicked_item)
+        self.ui.addActionButton.clicked.connect(self.on_actions_add)
+        self.ui.editActionButton.clicked.connect(self.on_actions_edit)
+        self.ui.removeActionButton.clicked.connect(self.on_actions_remove)
+
+        self.ui.upActionButton.clicked.connect(self.on_actions_list_up)
+        self.ui.downActionButton.clicked.connect(self.on_actions_list_down)
+
+        self.ui.editActionButton.setEnabled(False)
+        self.ui.removeActionButton.setEnabled(False)
+        self.ui.upActionButton.setEnabled(False)
+        self.ui.downActionButton.setEnabled(False)
+
+    def on_actions_list_up(self):
+        row = self.ui.actionList.currentRow()
+        currentItem = self.ui.actionList.takeItem(row)
+        new_row = row - 1
+        self.ui.actionList.insertItem(new_row, currentItem)
+        self.ui.actionList.setCurrentRow(new_row);
+        self.ui.upActionButton.setEnabled(new_row != 0)
+        self.ui.downActionButton.setEnabled(True)
+        self.save_actions()
+
+    def on_actions_list_down(self):
+        row = self.ui.actionList.currentRow()
+        currentItem = self.ui.actionList.takeItem(row)
+        new_row = row + 1
+        self.ui.actionList.insertItem(new_row, currentItem)
+        self.ui.actionList.setCurrentRow(new_row);
+        maxr = self.ui.actionList.count() - 1
+        self.ui.downActionButton.setEnabled(new_row != maxr)
+        self.ui.upActionButton.setEnabled(True)
+        self.save_actions()
+
+    def on_actions_dclicked_item(self, item):
+        info(f"dclicked {item.text()}, {item.action}")
+        if not self.ui.connectButton.isChecked():
+            return
+        # create a context - everything needed to run an action
+        context = RunContext(self, item)
+        context.perform_action()
+
+    def on_actions_clicked_item(self, item):
+        info(f"clicked {item.text()}, {item.action}")
+        self.ui.editActionButton.setEnabled(True) # enable once a row is selected
+        self.ui.removeActionButton.setEnabled(True)
+
+        row = self.ui.actionList.currentRow()
+        maxr = self.ui.actionList.count() - 1
+        self.ui.upActionButton.setEnabled(row != 0)
+        self.ui.downActionButton.setEnabled(row != maxr)
+
+    def on_actions_add(self):
+        info(f"clicked Add Button")
+
+        dialog = ActionDialog(self)
+        ActionDialog.name = ""
+        ActionDialog.action = ""
+        success = dialog.exec()
+        if not success:
+            return
+
+        if ActionDialog.name == "" or ActionDialog.action == "":
+            return
+
+        item = QListWidgetItem(ActionDialog.name)
+        item.action = ActionDialog.action
+        self.ui.actionList.addItem(item)
+        self.save_actions()
+
+    def save_actions(self):
+        actions = []
+        for i in range(self.ui.actionList.count()):
+            item = self.ui.actionList.item(i)
+            name = item.text()
+            action = item.action
+            actions.append((name, action))
+        add_user_setting('actions', actions)
+
+    def on_actions_edit(self):
+        item = self.ui.actionList.currentItem()
+        dialog = ActionDialog(self, item.text(), item.action)
+        info(f"edit {ActionDialog.name}")
+
+        success = dialog.exec()
+        if not success:
+            return
+
+        if ActionDialog.name == "" or ActionDialog.action == "":
+            return
+
+        item.setText(ActionDialog.name)
+        item.action = ActionDialog.action
+
+        self.save_actions()
+
+    def on_actions_remove(self):
+        item = self.ui.actionList.currentItem()
+        actions.remove((item.text(), item.action))
+        self.save_actions()
+
+        row = self.ui.actionList.currentRow()
+        self.ui.actionList.takeItem(row)
 
 class RunContext():
     """ Object contains everything that an action script can use to interact with the rest of

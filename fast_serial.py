@@ -7,18 +7,18 @@ import sys
 
 from serial.tools import list_ports
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QListWidgetItem
+from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import QThread, QRect, QEvent, Qt
 from PyQt5.Qt import QFontDatabase, QTextCursor
 
 from ui.ui_application import Ui_MainWindow
-from lib.set import add_user_setting, window_size, actions, baud_rates, splitter_pos, baud_rate, com_port
+from lib.set import add_user_setting, window_size, baud_rates, splitter_pos, baud_rate, com_port
 from lib.serial_port import SerialPort
-from lib.action_dialog import ActionDialog
+from lib.actions import ActionUi
+from lib.filters import FilterUi
 from lib.text import RichText
 from lib.history import History
-from lib.actions import RunContext
 
 from lib.project import logset
 debug, info, warn, err = logset('app')
@@ -36,7 +36,7 @@ if QtCore.QT_VERSION >= 0x50501:
 
 sys.excepthook = excepthook
 
-class MainWindow(QMainWindow):
+class MainWindow(QMainWindow, ActionUi, FilterUi):
 
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -55,21 +55,6 @@ class MainWindow(QMainWindow):
         self.scrollbar.sliderReleased.connect(self.on_scroll)
         self.autoscroll = False
         self.serial = None
-
-        for element in actions:
-            name, action = element
-            item = QListWidgetItem(name)
-            item.action = action
-            self.ui.actionList.addItem(item)
-
-        self.ui.actionList.itemDoubleClicked.connect(self.on_dclicked_item)
-        self.ui.actionList.itemClicked.connect(self.on_clicked_item)
-        self.ui.addButton.clicked.connect(self.on_add)
-        self.ui.editButton.clicked.connect(self.on_edit)
-        self.ui.removeButton.clicked.connect(self.on_remove)
-
-        self.ui.upButton.clicked.connect(self.on_list_up)
-        self.ui.downButton.clicked.connect(self.on_list_down)
 
         QFontDatabase.addApplicationFont("ui\\resources\\source-code-pro\\SourceCodePro-Regular.ttf")
         self.ui.comActivityEdit.setFont(QFont("Source Code Pro", 9))
@@ -92,37 +77,17 @@ class MainWindow(QMainWindow):
 
         self.ui.clearButton.clicked.connect(self.on_clear_clicked)
 
-        self.ui.editButton.setEnabled(False)
-        self.ui.removeButton.setEnabled(False)
-        self.ui.upButton.setEnabled(False)
-        self.ui.downButton.setEnabled(False)
-
         self.history = History()
         self.ui.sendLineEdit.returnPressed.connect(self.on_send)
         self.ui.sendLineEdit.installEventFilter(self)   # this causes eventFilter() to be called on key presses
 
         self.autoscroll = True
 
-    def on_list_up(self):
-        row = self.ui.actionList.currentRow()
-        currentItem = self.ui.actionList.takeItem(row)
-        new_row = row - 1
-        self.ui.actionList.insertItem(new_row, currentItem)
-        self.ui.actionList.setCurrentRow(new_row);
-        self.ui.upButton.setEnabled(new_row != 0)
-        self.ui.downButton.setEnabled(True)
-        self.save_actions()
+        # the action submenu activities are initialized here...
+        self.init_action_elements()
 
-    def on_list_down(self):
-        row = self.ui.actionList.currentRow()
-        currentItem = self.ui.actionList.takeItem(row)
-        new_row = row + 1
-        self.ui.actionList.insertItem(new_row, currentItem)
-        self.ui.actionList.setCurrentRow(new_row);
-        maxr = self.ui.actionList.count() - 1
-        self.ui.downButton.setEnabled(new_row != maxr)
-        self.ui.upButton.setEnabled(True)
-        self.save_actions()
+        # the filter submenu activities are initialized here...
+        self.init_filter_elements()
 
     def on_activity_selected(self):
         self.ui.comActivityEdit.selectionChanged.disconnect()
@@ -133,6 +98,7 @@ class MainWindow(QMainWindow):
         self.ui.comActivityEdit.selectionChanged.connect(self.on_activity_selected)
 
     def on_send(self):
+        """ Send out text from the send input line edit"""
         text = self.ui.sendLineEdit.text()
         self.history.add(text)
         if self.serial != None:
@@ -142,7 +108,7 @@ class MainWindow(QMainWindow):
         self.ui.sendLineEdit.setText("")
 
     def eventFilter(self, source, event):
-        """ Detect up/down arrow in the send widget """
+        """ Filters out keypress events. Detect up/down arrow in the send widget """
         if event.type() != QEvent.KeyPress:
             return super(MainWindow, self).eventFilter(source, event)
 
@@ -167,7 +133,6 @@ class MainWindow(QMainWindow):
         add_user_setting("com_port", text)
 
     def on_splitter_moved(self, pos, index):
-
         positions = [0, 0]
         positions[index] = pos
         add_user_setting('splitter_pos', positions)
@@ -179,78 +144,6 @@ class MainWindow(QMainWindow):
                 continue
             info(f"{port.name}, {port.description}, {port.hwid}")
             self.ui.portCBox.addItem(port.name, None)
-
-    def on_dclicked_item(self, item):
-        info(f"dclicked {item.text()}, {item.action}")
-
-        if not self.ui.connectButton.isChecked():
-            return
-
-        # create a context - everything needed to run an action
-        context = RunContext(self, item)
-        context.perform_action()
-
-    def on_clicked_item(self, item):
-        info(f"clicked {item.text()}, {item.action}")
-        self.ui.editButton.setEnabled(True) # enable once a row is selected
-        self.ui.removeButton.setEnabled(True)
-
-        row = self.ui.actionList.currentRow()
-        maxr = self.ui.actionList.count() - 1
-        self.ui.upButton.setEnabled(row != 0)
-        self.ui.downButton.setEnabled(row != maxr)
-
-    def on_add(self):
-        info(f"clicked Add Button")
-
-        dialog = ActionDialog(self)
-        ActionDialog.name = ""
-        ActionDialog.action = ""
-        success = dialog.exec()
-        if not success:
-            return
-
-        if ActionDialog.name == "" or ActionDialog.action == "":
-            return
-
-        item = QListWidgetItem(ActionDialog.name)
-        item.action = ActionDialog.action
-        self.ui.actionList.addItem(item)
-        self.save_actions()
-
-    def save_actions(self):
-        actions = []
-        for i in range(self.ui.actionList.count()):
-            item = self.ui.actionList.item(i)
-            name = item.text()
-            action = item.action
-            actions.append((name, action))
-        add_user_setting('actions', actions)
-
-    def on_edit(self):
-        item = self.ui.actionList.currentItem()
-        dialog = ActionDialog(self, item.text(), item.action)
-        info(f"edit {ActionDialog.name}")
-
-        success = dialog.exec()
-        if not success:
-            return
-
-        if ActionDialog.name == "" or ActionDialog.action == "":
-            return
-
-        item.setText(ActionDialog.name)
-        item.action = ActionDialog.action
-
-        self.save_actions()
-
-    def on_remove(self):
-        item = self.ui.actionList.currentItem()
-        actions.remove((item.text(), item.action))
-        self.save_actions()
-
-        row = self.ui.actionList.currentRow()
-        self.ui.actionList.takeItem(row)
 
     def on_connect_clicked(self):
         if self.ui.connectButton.isChecked():
@@ -295,8 +188,13 @@ class MainWindow(QMainWindow):
             self.serial.close()
 
     def add_to_serial_output(self, output):
-        self.com_traffic.insert_input_text(output)
-        self.serial.log(output)
+        """ Apply filters and insert the resulting text to the terminal window """
+
+        matched = self.active_filter.search(output)
+
+        if matched != None:
+            # found = matched.group(0)
+            self.com_traffic.insert_input_text(output)
 
         # auto scroll to end
         if self.autoscroll:
