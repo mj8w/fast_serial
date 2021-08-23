@@ -96,15 +96,18 @@ class MainWindow(QMainWindow, ActionUi, FilterUi):
         cursor.movePosition(QTextCursor.End)
         self.ui.comActivityEdit.setTextCursor(cursor)
         self.ui.comActivityEdit.selectionChanged.connect(self.on_activity_selected)
+        self.ui.sendLineEdit.setFocus()
 
     def on_send(self):
         """ Send out text from the send input line edit"""
         text = self.ui.sendLineEdit.text()
+        cr = "\r" if self.ui.crCheckBox.isChecked() else ""
+        lf = "\n" if self.ui.lfCheckBox.isChecked() else ""
         self.history.add(text)
         if self.serial != None:
-            self.serial.write(text + "\n")
-            self.com_traffic.write(text + "\n")
-            self.serial.log(text)
+            self.serial.write(f"{text}{cr}{lf}")
+            self.com_traffic.write(f"{text}{cr}{lf}")
+            self.serial.log(f"{text}")
         self.ui.sendLineEdit.setText("")
 
     def eventFilter(self, source, event):

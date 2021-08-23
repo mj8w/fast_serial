@@ -71,7 +71,10 @@ class SerialPort(QObject):
                     except IndexError:
                         break
                     if ch == '\r' or ch == '\n': # reached end-of-line
-                        ch2 = self.buffer[i + 1]
+                        try:
+                            ch2 = self.buffer[i + 1]
+                        except IndexError:
+                            break
                         info(f"{self.buffer[:i]}")
                         if ch2 == '\r' or ch2 == '\n' and ch != ch2: # end-of-line is 2 characters terminator
                             line = self.buffer[:i + 2]
@@ -86,4 +89,7 @@ class SerialPort(QObject):
         except:
             traceback.print_exc()
         self.closed.emit()
+
+    def log(self, text):
+        info(f"{text}")
 

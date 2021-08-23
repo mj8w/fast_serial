@@ -24,7 +24,7 @@
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
-       <widget class="QWidget" name="">
+       <widget class="QWidget" name="layoutWidget">
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout">
@@ -177,7 +177,7 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="">
+       <widget class="QWidget" name="layoutWidget">
         <layout class="QVBoxLayout" name="verticalLayout_5">
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_6">
@@ -327,6 +327,26 @@
           </item>
           <item>
            <widget class="QLineEdit" name="sendLineEdit"/>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="crCheckBox">
+            <property name="text">
+             <string>CR</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="lfCheckBox">
+            <property name="text">
+             <string>LF</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
