@@ -6,14 +6,17 @@ Fast_serial project founded by Micheal Wilson
 import sys
 from os.path import abspath, dirname
 
-this_dir = abspath(dirname(__file__)) # should be lib directory
-base_dir = abspath(f"{this_dir}\\..")
-
 import logging
 from logging import config as logging_config
 
-logfile = "\\".join([this_dir, 'logging.ini'])
-logging_config.fileConfig(logfile, disable_existing_loggers = False)
+if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    base_dir = abspath(dirname(sys._MEIPASS))
+    logfile = f"{base_dir}\\logging.ini"
+else:
+    this_dir = abspath(dirname(__file__)) # should be lib directory
+    base_dir = abspath(f"{this_dir}\\..")
+    logfile = f"{base_dir}\\lib\\logging.ini"
+    logging_config.fileConfig(logfile, disable_existing_loggers = False)
 
 def logset(logname):
     ''' convenience sets up a logger object pre-configured with default functions
@@ -29,3 +32,63 @@ def logset(logname):
     return (llog.debug, llog.info, llog.warning, llog.error)
 
 sys.path.append(base_dir)
+
+if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+
+    LOGGING_CONFIG = {
+        'version': 1,
+        'disable_existing_loggers': True,
+        'formatters': {
+            'standard': {
+                'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+            },
+            'bare': {
+                'format': '%(message)s'
+            },
+            'simple': {
+                'format': '%(name)s: %(message)s'
+            },
+            'more': {
+                'format': '%(relativeCreated)08d:%(name)s: %(message)s'
+            },
+        },
+        'handlers': {
+            'default': {
+                'level': 'INFO',
+                'formatter': 'standard',
+                'class': 'logging.StreamHandler',
+                'stream': 'ext://sys.stdout',  # Default is stderr
+            },
+            'stream': {
+                'level': 'NOTSET',
+                'formatter': 'simple',
+                'class': 'logging.StreamHandler',
+                'stream': 'ext://sys.stdout',  # Default is stderr
+            },
+            'serial': {
+                'level': 'INFO',
+                'formatter': 'more',
+                'class': 'logging.FileHandler',
+                'args': ('serial.log', 'w'),
+            },
+        },
+        'loggers': {
+            '': {  # root logger
+                'handlers': ['stream'],
+                'level': 'INFO',
+                'propagate': False
+            },
+            'app': {
+                'handlers': ['stream'],
+                'level': 'INFO',
+                'propagate': True
+            },
+            'serial': {
+                'handlers': ['serial'],
+                'level': 'INFO',
+                'propagate': True
+            },
+        }
+    }
+
+    logging_config.dictConfig(LOGGING_CONFIG)
