@@ -85,9 +85,10 @@ class ActionUi():
     def on_actions_add(self):
         info(f"clicked Add Button")
 
-        dialog = ActionDialog(self)
-        ActionDialog.name = ""
-        ActionDialog.action = ""
+        cr = "<cr>" if self.ui.crCheckBox.isChecked() else ""
+        lf = "<lf>" if self.ui.lfCheckBox.isChecked() else ""
+
+        dialog = ActionDialog(self, "", cr + lf)
         success = dialog.exec()
         if not success:
             return
