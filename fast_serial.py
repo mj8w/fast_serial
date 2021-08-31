@@ -13,7 +13,7 @@ from PyQt5.QtCore import QThread, QRect, QEvent, Qt
 from PyQt5.Qt import QFontDatabase, QTextCursor
 
 from ui.ui_application import Ui_MainWindow
-from lib.set import add_user_setting, window_size, baud_rates, splitter_pos, baud_rate, com_port
+from lib.set import add_user_setting, window_size, baud_rates, splitter_pos, splitter2_pos, baud_rate, com_port
 from lib.serial_port import SerialPort
 from lib.actions import ActionUi
 from lib.filters import FilterUi
@@ -71,6 +71,10 @@ class MainWindow(QMainWindow, ActionUi, FilterUi):
         self.ui.splitter.splitterMoved.connect(self.on_splitter_moved)
         self.ui.splitter.moveSplitter(splitter_pos[1], 1)
         self.ui.splitter.setHandleWidth(1)
+
+        self.ui.splitter_2.splitterMoved.connect(self.on_splitter2_moved)
+        self.ui.splitter_2.moveSplitter(splitter2_pos[1], 1)
+        self.ui.splitter_2.setHandleWidth(1)
 
         self.ui.baudCBox.currentTextChanged.connect(self.on_baud_changed)
         self.ui.portCBox.currentTextChanged.connect(self.on_port_changed)
@@ -139,6 +143,11 @@ class MainWindow(QMainWindow, ActionUi, FilterUi):
         positions = [0, 0]
         positions[index] = pos
         add_user_setting('splitter_pos', positions)
+
+    def on_splitter2_moved(self, pos, index):
+        positions = [0, 0]
+        positions[index] = pos
+        add_user_setting('splitter2_pos', positions)
 
     def on_refresh(self):
         available_ports = list_ports.comports()

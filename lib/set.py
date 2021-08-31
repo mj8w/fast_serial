@@ -17,7 +17,8 @@ values = {
     'actions':[('help', 'help<cr><lf>')],
     'filters':[('all', '.+')],
     'baud_rates':['1200', '2400', '4800', '9600', '19200', '38400', '57600', '115200'],
-    'splitter_pos':[0, 258],
+    'splitter_pos':[128, 258],
+    'splitter2_pos':[128, 258],
     'window_size':(167, 118, 1262, 367),
     'baud_rate':'115200',
     'com_port':'COM10',
@@ -51,17 +52,23 @@ def add_user_setting(variable, value):
             f.write(line)
 
 try:
-    from settings import baud_rates, splitter_pos, window_size, actions, filters, baud_rate, com_port, send_history
+    from settings import actions, filters, send_history
+except:
+    rewrite_settings_file()
+    actions = [('help', 'help<cr><lf>')]
+    filters = [('all', '.+')]
+    send_history = []
+
+try:
+    from settings import baud_rates, splitter_pos, splitter2_pos, window_size, baud_rate, com_port
 except:
     rewrite_settings_file()
     baud_rates = ['1200', '2400', '4800', '9600', '19200', '38400', '57600', '115200']
-    splitter_pos = [0, 258]
+    splitter_pos = [128, 258]
+    splitter2_pos = [128, 258]
     window_size = (167, 118, 1262, 367)
-    actions = [('help', 'help<cr><lf>')]
-    filters = [('all', '.+')]
     baud_rate = '115200'
     com_port = 'COM3'
-    send_history = []
 
-_ = (window_size, splitter_pos, actions, filters, baud_rates, baud_rate, com_port, send_history)
+_ = (window_size, splitter_pos, splitter2_pos, actions, filters, baud_rates, baud_rate, com_port, send_history)
 
