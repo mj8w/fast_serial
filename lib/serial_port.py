@@ -5,6 +5,7 @@ Fast_serial project founded by Micheal Wilson
 
 import traceback
 from serial import Serial, SerialException
+from lib.vesc_interface import VescInterface
 from PyQt5.QtCore import QObject, pyqtSignal
 
 from lib.project import logset
@@ -19,6 +20,8 @@ class SerialPort(QObject):
         self.serial = None
         self.running = False
         self.buffer = ""
+
+        self.vesc = VescInterface()
 
     def open(self, comport, baud_rate):
         try:
@@ -46,7 +49,8 @@ class SerialPort(QObject):
             pass
 
     def write(self, output):
-        self.serial.write(output.encode())
+        data = self.vesc.create_terminal_packet(output)
+        self.serial.write(data)
         self.serial.flush()
 
     def reader(self):
@@ -62,30 +66,10 @@ class SerialPort(QObject):
                 if len(btext) == 0:
                     continue
 
-                self.buffer += btext.decode("ISO-8859-1")
-
-                i = 0
-                while 1:
-                    try:
-                        ch = self.buffer[i]
-                    except IndexError:
-                        break
-                    if ch == '\r' or ch == '\n': # reached end-of-line
-                        try:
-                            ch2 = self.buffer[i + 1]
-                        except IndexError:
-                            break
-                        info(f"{self.buffer[:i]}")
-                        if ch2 == '\r' or ch2 == '\n' and ch != ch2: # end-of-line is 2 characters terminator
-                            line = self.buffer[:i + 2]
-                            self.buffer = self.buffer[i + 2:]
-                        else:
-                            line = self.buffer[:i + 1]
-                            self.buffer = self.buffer[i + 1:]
-                        self.read_text.emit(f"{line}")
-                        i = 0
-                    else:
-                        i += 1
+                packets = self.vesc.decode_packet(btext)
+                for packet in packets:
+                    text = self.vesc.process_terminal_packet(packet)
+                    self.read_text.emit(f"{text}\r\n")
         except:
             traceback.print_exc()
         self.closed.emit()
