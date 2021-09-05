@@ -32,41 +32,8 @@ class RichText():
         self.textEdit.insertPlainText(text)
 
     def insert_input_text(self, text):
-
-        results = self.crlf.split(text)
-
-        color = 0
-        for s in results:
-            if color % 2:
-                if s == "\n":
-                    s = "<LF>\n"
-                if s == "\r":
-                    s = "<CR>\n"
-                if s == "\r\n":
-                    s = "<CR><LF>\n"
-                if s == "\n\r":
-                    s = "<LF><CR>\n"
-                self.append_red_text(s)
-            else:
-                self.append_black_text(s)
-            color += 1
+        self.append_black_text(text)
+        return
 
     def write(self, text):
-
-        results = self.crlf.split(text)
-
-        color = 0
-        for s in results:
-            if color % 2:
-                if s == "\n\r":
-                    s = "<LF><CR>\n"
-                if s == "\r\n":
-                    s = "<CR><LF>\n"
-                if s == "\n":
-                    s = "<LF>\n"
-                if s == "\r":
-                    s = "<CR>\n"
-                self.append_red_text(s)
-            else:
-                self.append_blue_text(s)
-            color += 1
+        self.append_blue_text(text)
