@@ -15,6 +15,8 @@ try:
 except ModuleNotFoundError:
     scripts = None
 
+from serial.serialutil import SerialException
+
 from lib.project import logset
 debug, info, warn, err = logset('app')
 
@@ -168,7 +170,12 @@ class RunContext():
             return
 
         # basic operation writes text to the UART
-        self.serial.write(self.action)
+        try:
+            self.serial.write(self.action)
+        except SerialException:
+            self.terminal.write(f"\r\n<<< SERIAL PORT ERROR (closed) >>>")
+            self.parent.on_disconnect()
+            return
         self.terminal.write(self.action)
 
     def run_action_in_background(self):
