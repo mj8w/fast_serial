@@ -21,6 +21,7 @@ from lib.history import History
 from lib.connect import ConnectButton
 
 from lib.project import logset, base_dir
+from serial.serialutil import SerialException
 debug, info, warn, err = logset('app')
 
 # from lib.git_version import git_short_version
@@ -107,7 +108,12 @@ class MainWindow(QMainWindow, ActionUi, FilterUi, ConnectButton):
         lf = "\n" if self.ui.lfCheckBox.isChecked() else ""
         self.history.add(text)
         if self.serial != None:
-            self.serial.write(f"{text}{cr}{lf}")
+            try:
+                self.serial.write(f"{text}{cr}{lf}")
+            except SerialException:
+                self.com_traffic.write(f"{cr}{lf}<<< SERIAL PORT ERROR (closed) >>>")
+                self.on_disconnect()
+                return
             self.com_traffic.write(f"{text}{cr}{lf}")
             self.serial.log(f"{text}")
         self.ui.sendLineEdit.setText("")

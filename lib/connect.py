@@ -31,7 +31,7 @@ class ConnectButton():
         comport = self.ui.portCBox.currentText()
         if not self.serial.open(comport, baud):
             self.add_to_serial_output("NOT ABLE TO OPEN PORT")
-            self.ui.connectButton.checked = False
+            self.ui.connectButton.setChecked(False)
             self.serial = None
             return
 
@@ -76,3 +76,6 @@ class ConnectButton():
         # re-enable comport and baudrate dropdowns
         self.ui.baudCBox.setEnabled(True)
         self.ui.portCBox.setEnabled(True)
+
+        # because this can be called by external code, explicitly make the button unchecked
+        self.ui.connectButton.setChecked(False)
