@@ -9,18 +9,18 @@ from serial.tools import list_ports
 
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtGui import QFont
-from PyQt5.QtCore import QThread, QRect, QEvent, Qt
+from PyQt5.QtCore import QRect, QEvent, Qt
 from PyQt5.Qt import QFontDatabase, QTextCursor
 
 from ui.ui_application import Ui_MainWindow
 from lib.set import add_user_setting, window_size, baud_rates, splitter_pos, splitter2_pos, baud_rate, com_port
-from lib.serial_port import SerialPort
 from lib.actions import ActionUi
 from lib.filters import FilterUi
 from lib.text import RichText
 from lib.history import History
+from lib.connect import ConnectButton
 
-from lib.project import logset
+from lib.project import logset, base_dir
 debug, info, warn, err = logset('app')
 
 # from lib.git_version import git_short_version
@@ -36,7 +36,7 @@ if QtCore.QT_VERSION >= 0x50501:
 
 sys.excepthook = excepthook
 
-class MainWindow(QMainWindow, ActionUi, FilterUi):
+class MainWindow(QMainWindow, ActionUi, FilterUi, ConnectButton):
 
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -46,9 +46,7 @@ class MainWindow(QMainWindow, ActionUi, FilterUi):
         self.setGeometry(QRect(*window_size))
         self.show()
 
-        self.ui.connectButton.clicked.connect(self.on_connect_clicked)
-        self.ui.connectButton.setCheckable(True)
-        self.ui.connectButton.setStyleSheet("background-color : lightgrey")
+        self.setup_connectButton()
         self.on_comport_off()
 
         self.scrollbar = self.ui.comActivityEdit.verticalScrollBar()
@@ -56,7 +54,7 @@ class MainWindow(QMainWindow, ActionUi, FilterUi):
         self.autoscroll = False
         self.serial = None
 
-        QFontDatabase.addApplicationFont("ui\\resources\\source-code-pro\\SourceCodePro-Regular.ttf")
+        QFontDatabase.addApplicationFont(f"{base_dir}\\ui\\resources\\source-code-pro\\SourceCodePro-Regular.ttf")
         self.ui.comActivityEdit.setFont(QFont("Source Code Pro", 9))
         self.ui.comActivityEdit.setReadOnly(True)
         self.ui.comActivityEdit.selectionChanged.connect(self.on_activity_selected)
@@ -156,48 +154,6 @@ class MainWindow(QMainWindow, ActionUi, FilterUi):
                 continue
             info(f"{port.name}, {port.description}, {port.hwid}")
             self.ui.portCBox.addItem(port.name, None)
-
-    def on_connect_clicked(self):
-        if self.ui.connectButton.isChecked():
-            self.ui.comActivityEdit.selectionChanged.connect(self.on_activity_selected)
-            self.ui.comActivityEdit.setReadOnly(True)
-            cursor = self.ui.comActivityEdit.textCursor()
-            cursor.clearSelection()
-            cursor.movePosition(QTextCursor.End)
-            self.ui.comActivityEdit.setTextCursor(cursor)
-            baud = self.ui.baudCBox.currentText()
-            comport = self.ui.portCBox.currentText()
-            info(f"baud {baud}")
-            info(f"comport {comport}")
-            # try to open the serial port
-
-            self.thread = QThread()
-            self.serial = SerialPort()
-            if not self.serial.open(comport, baud_rate):
-                self.add_to_serial_output("NOT ABLE TO OPEN PORT")
-                return
-
-            self.serial.moveToThread(self.thread)
-
-            # connect signals
-            self.serial.connect_to_thread(self.thread)
-            self.serial.read_text.connect(self.add_to_serial_output)
-            self.serial.closed.connect(self.on_comport_off)
-
-            self.thread.start()
-
-            self.ui.connectButton.setStyleSheet("background-color : lightblue")
-
-            info(f"Port Opened")
-            self.ui.comActivityEdit.setStyleSheet("border: 1px solid gray; background-color: white;")
-
-        else:
-            self.ui.comActivityEdit.selectionChanged.disconnect()
-            self.ui.connectButton.setEnabled(False) # temporarily until thread has completed
-            self.ui.connectButton.setStyleSheet("background-color : lightgrey")
-            self.ui.comActivityEdit.setReadOnly(False)
-            self.serial.read_text.disconnect()
-            self.serial.close()
 
     def add_to_serial_output(self, output):
         """ Apply filters and insert the resulting text to the terminal window """
