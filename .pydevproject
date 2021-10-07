@@ -24,8 +24,7 @@
     
     
     
-    <pydev_property name="org.python.pydev.PYTHON_PROJECT_INTERPRETER">py3.8</pydev_property>
-                
+    <pydev_property name="org.python.pydev.PYTHON_PROJECT_INTERPRETER">Default</pydev_property>
 
 
 

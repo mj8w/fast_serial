@@ -4,15 +4,19 @@ Fast_serial project founded by Micheal Wilson
 """
 
 import sys
+from os import sep
 from os.path import abspath, dirname
 
 this_dir = abspath(dirname(__file__)) # should be lib directory
-base_dir = abspath(f"{this_dir}\\..")
+base_dir = abspath(f"{this_dir}{sep}..")
 
 import logging
 from logging import config as logging_config
 
-logfile = "\\".join([this_dir, 'logging.ini'])
+logfile = sep.join([this_dir, 'logging.ini'])
+
+print(f"LOGFILE = {logfile}")
+
 logging_config.fileConfig(logfile, disable_existing_loggers = False)
 
 def logset(logname):
