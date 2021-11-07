@@ -1,18 +1,37 @@
 """
 Copyright 2021 Micheal Wilson
 Fast_serial project founded by Micheal Wilson
+
+    This file is part of Fast_Serial.
+
+    Fast_Serial is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.
+
+    Fast_Serial is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Fast_Serial.  If not, see <https://www.gnu.org/licenses/>
 """
 
 import sys
+from os import sep
 from os.path import abspath, dirname
 
 this_dir = abspath(dirname(__file__)) # should be lib directory
-base_dir = abspath(f"{this_dir}\\..")
+base_dir = abspath(f"{this_dir}{sep}..")
 
 import logging
 from logging import config as logging_config
 
-logfile = "\\".join([this_dir, 'logging.ini'])
+logfile = sep.join([this_dir, 'logging.ini'])
+
+print(f"LOGFILE = {logfile}")
+
 logging_config.fileConfig(logfile, disable_existing_loggers = False)
 
 def logset(logname):

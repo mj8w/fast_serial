@@ -17,22 +17,26 @@ Fast_serial project founded by Micheal Wilson
     You should have received a copy of the GNU General Public License
     along with Fast_Serial.  If not, see <https://www.gnu.org/licenses/>
 """
+
+from setuptools import setup
+
 import os
 
-app = "c:\\Apps\\Anaconda\\envs\\py38\\Scripts\\pyuic5.exe"
-
-files = [
-    "application",
-    "setup",
-    "action_dialog",
-    "filter_dialog",
-    "run_dialog"
-    ]
-
-def main():
-
-    for file in files:
-        os.system(f"{app} {file}.ui > ui_{file}.py")
-
-if __name__ == '__main__':
-    main()
+def get_long_description():
+    with open(
+        os.path.join(os.path.dirname(__file__), "README.md"),
+        encoding="utf8",
+    ) as fp:
+        return fp.read()
+    
+setup(
+    name="fast_serial",
+    version="1.0",
+    description="Basic serial terminal",
+    long_description=get_long_description(),
+    long_description_content_type="text/markdown",
+    author="Mike Wilson",
+    url="https://https://github.com/mj8w/fast_serial",
+    license="GNU General Public License, Version 2.0",    
+    py_modules=["fast_serial"],
+)
