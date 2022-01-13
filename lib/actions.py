@@ -27,7 +27,7 @@ from lib.set import add_user_setting, actions
 from ui.run_action import RunActionDialog
 from lib.dialogs import ActionDialog
 try:
-    import scripts # @UnresolvedImport
+    import scripts  # @UnresolvedImport
 except ModuleNotFoundError:
     scripts = None
 
@@ -92,7 +92,7 @@ class ActionUi():
 
     def on_actions_clicked_item(self, item):
         info(f"clicked {item.text()}, {item.action}")
-        self.ui.editActionButton.setEnabled(True) # enable once a row is selected
+        self.ui.editActionButton.setEnabled(True)  # enable once a row is selected
         self.ui.removeActionButton.setEnabled(True)
 
         row = self.ui.actionList.currentRow()
@@ -148,10 +148,9 @@ class ActionUi():
     def on_actions_remove(self):
         item = self.ui.actionList.currentItem()
         actions.remove((item.text(), item.action))
-        self.save_actions()
-
         row = self.ui.actionList.currentRow()
         self.ui.actionList.takeItem(row)
+        self.save_actions()
 
 class RunContext():
     """ Object contains everything that an action script can use to interact with the rest of

@@ -19,12 +19,13 @@ Fast_serial project founded by Micheal Wilson
 """
 
 import re
+from os import sep
 
 from lib.project import logset, base_dir
 debug, info, warn, err = logset('app')
 
 settings_file = "settings.py"
-settings = "\\".join([base_dir, settings_file])
+settings = sep.join([base_dir, settings_file])
 
 # get the default settings
 values = {

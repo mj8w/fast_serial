@@ -22,7 +22,7 @@ import sys
 from os import sep
 from os.path import abspath, dirname
 
-this_dir = abspath(dirname(__file__)) # should be lib directory
+this_dir = abspath(dirname(__file__))  # should be lib directory
 base_dir = abspath(f"{this_dir}{sep}..")
 
 import logging
@@ -48,3 +48,5 @@ def logset(logname):
     return (llog.debug, llog.info, llog.warning, llog.error)
 
 sys.path.append(base_dir)
+
+from platform import system
