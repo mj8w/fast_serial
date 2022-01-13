@@ -23,7 +23,7 @@ from PyQt5.Qt import QTextCursor
 from lib.serial_port import SerialPort
 from lib.set import baud_rate
 
-from lib.project import logset
+from lib.project import logset, system
 debug, info, warn, err = logset('app')
 
 class ConnectButton():
@@ -48,6 +48,9 @@ class ConnectButton():
         self.serial = SerialPort()
         baud = self.ui.baudCBox.currentText()
         comport = self.ui.portCBox.currentText()
+        if system() == "Linux":
+            comport = "/dev/" + comport
+
         if not self.serial.open(comport, baud):
             self.add_to_serial_output("NOT ABLE TO OPEN PORT")
             self.ui.connectButton.setChecked(False)
@@ -86,7 +89,7 @@ class ConnectButton():
         """ When button is clicked and the result is the button is "OFF" """
 
         self.ui.comActivityEdit.selectionChanged.disconnect()
-        self.ui.connectButton.setEnabled(False) # temporarily until thread has completed
+        self.ui.connectButton.setEnabled(False)  # temporarily until thread has completed
         self.ui.connectButton.setStyleSheet("background-color : lightgrey")
         self.ui.comActivityEdit.setReadOnly(False)
         self.serial.read_text.disconnect()
