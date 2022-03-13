@@ -18,8 +18,9 @@ Fast_serial project founded by Micheal Wilson
     along with Fast_Serial.  If not, see <https://www.gnu.org/licenses/>
 """
 import os
+from os import sep
 
-app = "c:\\Apps\\Anaconda\\envs\\py38\\Scripts\\pyuic5.exe"
+app = f"pyuic5.exe"
 
 files = [
     "application",

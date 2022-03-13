@@ -36,6 +36,7 @@ from lib.history import History
 from lib.connect import ConnectButton
 
 from lib.project import logset, base_dir
+from os import sep
 from serial.serialutil import SerialException
 debug, info, warn, err = logset('app')
 
@@ -70,7 +71,7 @@ class MainWindow(QMainWindow, ActionUi, FilterUi, ConnectButton):
         self.autoscroll = False
         self.serial = None
 
-        QFontDatabase.addApplicationFont(f"{base_dir}\\ui\\resources\\source-code-pro\\SourceCodePro-Regular.ttf")
+        QFontDatabase.addApplicationFont(f"{base_dir}{sep}ui{sep}resources{sep}source-code-pro{sep}SourceCodePro-Regular.ttf")
         self.ui.comActivityEdit.setFont(QFont("Source Code Pro", 9))
         self.ui.comActivityEdit.setReadOnly(True)
         self.ui.comActivityEdit.selectionChanged.connect(self.on_activity_selected)
@@ -98,7 +99,8 @@ class MainWindow(QMainWindow, ActionUi, FilterUi, ConnectButton):
         self.history = History()
         self.ui.sendLineEdit.returnPressed.connect(self.on_send)
         self.ui.sendLineEdit.installEventFilter(self)   # this causes eventFilter() to be called on key presses
-
+        self.ui.showCrLfCBox.toggled.connect(self.crlf_toggled)
+        self.ui.showCtrlCBox.toggled.connect(self.ctrl_toggled)
         self.autoscroll = True
 
         # the action submenu activities are initialized here...
@@ -126,7 +128,7 @@ class MainWindow(QMainWindow, ActionUi, FilterUi, ConnectButton):
             try:
                 self.serial.write(f"{text}{cr}{lf}")
             except SerialException:
-                self.com_traffic.write(f"{cr}{lf}<<< SERIAL PORT ERROR (closed) >>>")
+                self.com_traffic.write(f"{cr}{lf}<<< SERIAL PORT ERROR (closing) >>>")
                 self.on_disconnect()
                 return
             self.com_traffic.write(f"{text}{cr}{lf}")
@@ -175,6 +177,12 @@ class MainWindow(QMainWindow, ActionUi, FilterUi, ConnectButton):
                 continue
             info(f"{port.name}, {port.description}, {port.hwid}")
             self.ui.portCBox.addItem(port.name, None)
+
+    def crlf_toggled(self, state):
+        self.com_traffic.show_crlf(state)
+        
+    def ctrl_toggled(self, state):
+        self.com_traffic.show_ctrl(state)
 
     def add_to_serial_output(self, output):
         """ Apply filters and insert the resulting text to the terminal window """

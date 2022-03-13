@@ -20,14 +20,15 @@ controlnames = [
 
 class RichText():
 
-    def __init__(self, textEdit, mark_crlf = False):
+    def __init__(self, textEdit):
         self.textEdit = textEdit
 
         self.redColor = QColor(255, 0, 0)
         self.blueColor = QColor(0, 0, 255)
         self.blackColor = QColor(0, 0, 0)
         self.crlf = re.compile("(\r\n|\n\r|\r|\n)")
-        self.mark_crlf = mark_crlf
+        self.mark_crlf = False
+        self.mark_ctrl = False
 
     def append_black_text(self, text):
         self.textEdit.setTextColor(self.blackColor)
@@ -41,47 +42,46 @@ class RichText():
         self.textEdit.setTextColor(self.blueColor)
         self.textEdit.insertPlainText(text)
 
+    def show_crlf(self, show = True):
+        self.mark_crlf = show
+        
+    def show_ctrl(self, show = True):
+        self.mark_ctrl = show
+
     def insert_input_text(self, text):
 
-        if not self.mark_crlf:
+        if not self.mark_crlf and not self.mark_ctrl:
             self.append_black_text(text)
             return
 
         for char in text:
-            if ord(char) < 32:
-                mark = f"<{controlnames[ord(char)]}>"
-                self.append_red_text(mark)
+            
+            if (char == "\n" or char == "\r"):
+                if self.mark_crlf:
+                    self.append_red_text(f"<{controlnames[ord(char)]}>")
                 if char == "\n":
                     self.textEdit.insertPlainText(char)
-
+            elif ord(char) < 32:
+                if self.mark_ctrl:
+                    self.append_red_text(f"<{controlnames[ord(char)]}>")
             elif ord(char) > 127:
-                mark = f"<{ord(char):02X}>"
-                self.append_red_text(mark)
-                if char == "\n":
-                    self.textEdit.insertPlainText(char)
+                if self.mark_ctrl:
+                    self.append_red_text(f"<{ord(char):02X}>")
             else:
                 self.append_black_text(char)
 
     def write(self, text):
-
-        if not self.mark_crlf:
-            self.append_blue_text(text)
-            return
-
-        results = self.crlf.split(text)
-
-        color = 0
-        for s in results:
-            if color % 2:
-                if s == "\n\r":
-                    s = "<LF><CR>\n"
-                if s == "\r\n":
-                    s = "<CR><LF>\n"
-                if s == "\n":
-                    s = "<LF>\n"
-                if s == "\r":
-                    s = "<CR>\n"
-                self.append_red_text(s)
+        for char in text:
+            if (char == "\n" or char == "\r"):
+                if self.mark_crlf:
+                    self.append_red_text(f"<{controlnames[ord(char)]}>")
+                if char == "\n":
+                    self.textEdit.insertPlainText(char)
+            elif ord(char) < 32:
+                if self.mark_ctrl:
+                    self.append_red_text(f"<{controlnames[ord(char)]}>")
+            elif ord(char) > 127:
+                if self.mark_ctrl:
+                    self.append_red_text(f"<{ord(char):02X}>")
             else:
-                self.append_blue_text(s)
-            color += 1
+                self.append_blue_text(char)
