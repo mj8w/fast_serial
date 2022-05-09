@@ -61,8 +61,11 @@ class SerialPort(QObject):
             pass
 
     def write(self, output):
-        self.serial.write(output.encode())
-        self.serial.flush()
+        try:
+            self.serial.write(output.encode())
+            self.serial.flush()
+        except SerialException:
+            pass
 
     def reader(self):
         """Read serial port task."""

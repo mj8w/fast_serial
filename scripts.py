@@ -24,21 +24,22 @@ Fast_serial project founded by Micheal Wilson
 # all action scripts must be inside this file, but of course, you can
 # import other functions and call them from here
 
-from lib.expect import Expect
+from lib.expect import Aborting
+
 from lib.project import logset
 debug, info, warn, err = logset('scripts')
 
 # See the terminal commands possible in lib/text.py
-def hello_world(serial, terminal, dialog):
-    """ Print Hello World! to monitor """
+def hello_world(context):
+    """ Print Hello World! to monitor x 10, as fast as possible """
 
-    ex = Expect(serial.read_text) 
-
-    # TODO: wrap in try-except and pass abort signal to except
-    for x in range(10):
-        if not dialog.running:
-            return
-        dialog.percent_complete = x * 10
-        terminal.append_blue_text("run(hello_world): Sending Hello!\n")
-        serial.write("Hello!\r\n")
-        ex.expect("Invalid Command Request:", 300)
+    try:
+        # TODO: wrap in try-except and pass abort signal to except
+        for x in range(10):
+            context.progress.emit(x * 10)
+            context.comment.emit("run(hello_world): Sending Hello!\n")
+            context.write("Hello!\r\n")
+            context.input.expect("Invalid Command Request:", 300)
+    except Aborting:
+        info("Aborted")
+        return
