@@ -21,7 +21,6 @@ Fast_serial project founded by Micheal Wilson
 from PyQt5.QtCore import QThread
 from PyQt5.Qt import QTextCursor
 from lib.serial_port import SerialPort
-from lib.set import baud_rate
 
 from lib.project import logset, system
 debug, info, warn, err = logset('app')

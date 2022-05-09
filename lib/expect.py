@@ -18,6 +18,9 @@ Fast_serial project founded by Micheal Wilson
     along with Fast_Serial.  If not, see <https://www.gnu.org/licenses/>
 """
 
+from lib.project import logset
+debug, info, warn, err = logset('app')
+
 import time
 import re
 from threading import Lock, Semaphore
@@ -31,10 +34,13 @@ class NotFound(Exception):
     def __str__(self):
         return f"Found '{self.found}' instead of '{self.searching_for}'"
 
+class Aborting(Exception):
+    ''' raise when the port closes or similar aborting all operations '''
+
 class Expect():
     ''' For expecting data from a datastream '''
 
-    def __init__(self):
+    def __init__(self, signal):
         self.block = Semaphore() # allow blocking while waiting for data to arrive
 
         self.mutex = Lock() # protects incoming data buffer
@@ -43,13 +49,21 @@ class Expect():
         # we can un-block processing anytime, it just allows one extra loop of checks in the expect function.
         # better to unblock unnecessarily than to block accidentally.
         self.block.release()    # enable processing in the expect function
+        self.abort = False
+        signal.connect(self.process_input)
 
-    def enter_incoming_data(self, data):
+    def process_input(self, data):
         """ enter data that might be expected. """
         with self.mutex:
             self.incoming_data += data
         # release whenever we have data to process
         self.block.release()    # enable processing in the expect function
+
+    def on_comport_off(self):
+        ''' when comport is closed, cancel any open expects. '''
+        info("ABORTING")
+        self.abort = True
+        self.block.release()    # enable processing in the expect function 
 
     def start_timer(self):
         self.start_time = time.time()
@@ -79,6 +93,8 @@ class Expect():
         index = 0
         while self.time_left(timeout) > 0:
             self.block.acquire(True, self.time_left(timeout)) # block until some data arrives
+            if self.abort:
+                raise Aborting
             while index < self.data_len(): # this gets updated as new data arrives if it does while processing
                 with self.mutex:
                     matched = compare.match(self.incoming_data[0:index])
