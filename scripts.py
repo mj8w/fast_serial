@@ -29,6 +29,14 @@ from lib.expect import Aborting, NotFound
 from lib.project import logset
 debug, info, warn, err = logset('scripts')
 
+"""
+ TO USE THIS FEATURE:
+ - create a new action
+ - after naming the action, set the action text to "<run(hello_world)>"
+ - save the action
+ - connect to a serial port, then double click the new action
+"""
+
 def hello_world(context):
     """ Print Hello World! to monitor x 10, as fast as possible
         and wait for "Invalid Request" each time
