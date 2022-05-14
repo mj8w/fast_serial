@@ -24,22 +24,26 @@ Fast_serial project founded by Micheal Wilson
 # all action scripts must be inside this file, but of course, you can
 # import other functions and call them from here
 
-from lib.expect import Aborting
+from lib.expect import Aborting, NotFound
 
 from lib.project import logset
 debug, info, warn, err = logset('scripts')
 
-# See the terminal commands possible in lib/text.py
 def hello_world(context):
-    """ Print Hello World! to monitor x 10, as fast as possible """
-
+    """ Print Hello World! to monitor x 10, as fast as possible
+        and wait for "Invalid Request" each time
+    """
     try:
-        # TODO: wrap in try-except and pass abort signal to except
         for x in range(10):
-            context.progress.emit(x * 10)
-            context.comment.emit("run(hello_world): Sending Hello!\n")
+            context.progress(x * 10)
+            context.comment("run(hello_world): Sending Hello!\n")
             context.write("Hello!\r\n")
-            context.input.expect("Invalid Command Request:", 300)
+            context.input.expect("Invalid Request", 3)
+    except NotFound as nf:
+        context.comment(f"found '{nf.found}'")
+        context.comment(f"expected '{nf.searching_for}' - aborting")
+        return
     except Aborting:
         info("Aborted")
+        context.comment("ABORTED\n")
         return
