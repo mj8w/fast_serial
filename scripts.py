@@ -24,16 +24,34 @@ Fast_serial project founded by Micheal Wilson
 # all action scripts must be inside this file, but of course, you can
 # import other functions and call them from here
 
-import time
+from lib.expect import Aborting, NotFound
 
-# See the terminal commands possible in lib/text.py
-def hellow_world(serial, terminal, dialog):
-    """ Print Hello World! to monitor """
+from lib.project import logset
+debug, info, warn, err = logset('scripts')
 
-    for x in range(10):
-        if not dialog.running:
-            return
-        dialog.percent_complete = x * 10
-        terminal.append_blue_text("Hello World\n")
-        serial.write("\r\n")
-        time.sleep(1)
+"""
+ TO USE THIS FEATURE:
+ - create a new action
+ - after naming the action, set the action text to "<run(hello_world)>"
+ - save the action
+ - connect to a serial port, then double click the new action
+"""
+
+def hello_world(context):
+    """ Print Hello World! to monitor x 10, as fast as possible
+        and wait for "Invalid Request" each time
+    """
+    try:
+        for x in range(10):
+            context.progress(x * 10)
+            context.comment("run(hello_world): Sending Hello!\n")
+            context.write("Hello!\r\n")
+            context.input.expect("Invalid Request", 3)
+    except NotFound as nf:
+        context.comment(f"found '{nf.found}'")
+        context.comment(f"expected '{nf.searching_for}' - aborting")
+        return
+    except Aborting:
+        info("Aborted")
+        context.comment("ABORTED\n")
+        return

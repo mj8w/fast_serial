@@ -19,10 +19,11 @@ Fast_serial project founded by Micheal Wilson
 """
 
 import re
-from threading import Thread
+from PyQt5.QtCore import QObject, QThread, pyqtSignal
 
 from PyQt5.QtWidgets import QListWidgetItem
 from lib.set import add_user_setting, actions
+from lib.expect import Expect
 
 from ui.run_action import RunActionDialog
 from lib.dialogs import ActionDialog
@@ -152,16 +153,19 @@ class ActionUi():
         self.ui.actionList.takeItem(row)
         self.save_actions()
 
-class RunContext():
+class RunContext(QObject):
     """ Object contains everything that an action script can use to interact with the rest of
         the program
     """
+    aborted = pyqtSignal()
 
     def __init__(self, parent, list_widget_item):
+        super(RunContext, self).__init__()
         self.serial = parent.serial
         self.terminal = parent.com_traffic
         self.script = None
         self.parent = parent
+        self.parent.comport_disconnect.connect(self.abort)
 
         replacement = {"<cr>":"\r", "<lf>":"\n"}
 
@@ -178,6 +182,9 @@ class RunContext():
             self.script = mrun.group(1)
         self.name = list_widget_item.text()
 
+    def abort(self):
+        self.aborted.emit()
+
     def perform_action(self):
         ''' Perform the action in the action list item '''
         if self.script != None:
@@ -193,19 +200,71 @@ class RunContext():
             return
         self.terminal.write(self.action)
 
+    def write_to_serial(self, text):
+        try:
+            self.serial.write(text)
+        except SerialException:
+            self.terminal.write(f"\r\n<<< SERIAL PORT ERROR (closed) >>>")
+            self.parent.on_disconnect()
+            return
+        self.terminal.write(text)
+
     def run_action_in_background(self):
 
         self.dialog = RunActionDialog(self.parent, self.name)
         self.dialog.start()
-        run_thread = Thread(target = self.update_mode_thread)
-        run_thread.daemon = True
-        run_thread.start()
+
+        def update_progress(percent):
+            self.dialog.percent_complete = percent
+
+        def finished():
+            self.dialog.percent_complete = 100
+
+        # set up the script's thread
+        self.thread = QThread()
+        self.worker = RunScript(
+            read_signal=self.serial.read_text,
+            script=self.script,
+            abort_signal=self.aborted)
+        self.worker.moveToThread(self.thread)
+
+        # connect signals
+        self.thread.started.connect(self.worker.run)
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
+        self.worker.finished.connect(finished)
+        self.worker.update_progress.connect(update_progress)
+        self.worker.update_comment.connect(self.terminal.append_blue_text)
+        self.worker.write_serial.connect(self.write_to_serial)
+        self.thread.start()
 
         # this will block until the dialog closes
         self.dialog.exec()
+        self.aborted.emit()
 
-    def update_mode_thread(self):
+class RunScript(QObject):
+    finished = pyqtSignal()
+    update_progress = pyqtSignal(int)
+    write_serial = pyqtSignal(str)
+    update_comment = pyqtSignal(str)
+
+    def __init__(self, script, read_signal, abort_signal):
+        super(RunScript, self).__init__()
+        self.script = script
+        self.input = Expect(read_signal)
+        abort_signal.connect(self.input.on_abort)
+
+    def progress(self, percent):
+        self.update_progress.emit(percent)
+
+    def comment(self, text):
+        self.update_comment.emit(text)
+
+    def write(self, text):
+        self.write_serial.emit(text)
+
+    def run(self):
         """ Thread which runs the action script. """
-        getattr(scripts, self.script)(self.serial, self.terminal, self.dialog)
-        self.dialog.percent_complete = 100
-
+        getattr(scripts, self.script)(self)
+        self.finished.emit()
