@@ -19,12 +19,13 @@ Fast_serial project founded by Micheal Wilson
 """
 
 import sys
+from os import sep
 
 from serial.tools import list_ports
 
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtGui import QFont
-from PyQt5.QtCore import QRect, QEvent, Qt
+from PyQt5.QtCore import QRect, QEvent, Qt, pyqtSignal
 from PyQt5.Qt import QFontDatabase, QTextCursor
 
 from ui.ui_application import Ui_MainWindow
@@ -36,7 +37,6 @@ from lib.history import History
 from lib.connect import ConnectButton
 
 from lib.project import logset, base_dir
-from os import sep
 from serial.serialutil import SerialException
 debug, info, warn, err = logset('app')
 
@@ -54,6 +54,8 @@ if QtCore.QT_VERSION >= 0x50501:
 sys.excepthook = excepthook
 
 class MainWindow(QMainWindow, ActionUi, FilterUi, ConnectButton):
+
+    comport_disconnect = pyqtSignal()
 
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -98,7 +100,7 @@ class MainWindow(QMainWindow, ActionUi, FilterUi, ConnectButton):
 
         self.history = History()
         self.ui.sendLineEdit.returnPressed.connect(self.on_send)
-        self.ui.sendLineEdit.installEventFilter(self)   # this causes eventFilter() to be called on key presses
+        self.ui.sendLineEdit.installEventFilter(self)  # this causes eventFilter() to be called on key presses
         self.ui.showCrLfCBox.toggled.connect(self.crlf_toggled)
         self.ui.showCtrlCBox.toggled.connect(self.ctrl_toggled)
         self.autoscroll = True
@@ -180,7 +182,7 @@ class MainWindow(QMainWindow, ActionUi, FilterUi, ConnectButton):
 
     def crlf_toggled(self, state):
         self.com_traffic.show_crlf(state)
-        
+
     def ctrl_toggled(self, state):
         self.com_traffic.show_ctrl(state)
 
@@ -199,13 +201,14 @@ class MainWindow(QMainWindow, ActionUi, FilterUi, ConnectButton):
 
     def on_scroll(self):
         current = self.scrollbar.value()
-        if current >= self.scrollbar.maximum() - 5: # add in a little fudge for fast moving data
+        if current >= self.scrollbar.maximum() - 5:  # add in a little fudge for fast moving data
             self.autoscroll = True
         else:
             self.autoscroll = False
 
     def on_comport_off(self):
         info(f"comport is OFF")
+        self.comport_disconnect.emit()
         self.ui.connectButton.setEnabled(True)
         self.ui.comActivityEdit.setStyleSheet("border: 1px solid white; background-color: beige;")
 

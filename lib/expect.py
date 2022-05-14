@@ -41,14 +41,14 @@ class Expect():
     ''' For expecting data from a datastream '''
 
     def __init__(self, signal):
-        self.block = Semaphore() # allow blocking while waiting for data to arrive
+        self.block = Semaphore()  # allow blocking while waiting for data to arrive
 
-        self.mutex = Lock() # protects incoming data buffer
-        self.incoming_data = "" # incoming data buffer
+        self.mutex = Lock()  # protects incoming data buffer
+        self.incoming_data = ""  # incoming data buffer
 
         # we can un-block processing anytime, it just allows one extra loop of checks in the expect function.
         # better to unblock unnecessarily than to block accidentally.
-        self.block.release()    # enable processing in the expect function
+        self.block.release()  # enable processing in the expect function
         self.abort = False
         signal.connect(self.process_input)
 
@@ -57,13 +57,13 @@ class Expect():
         with self.mutex:
             self.incoming_data += data
         # release whenever we have data to process
-        self.block.release()    # enable processing in the expect function
+        self.block.release()  # enable processing in the expect function
 
-    def on_comport_off(self):
-        ''' when comport is closed, cancel any open expects. '''
+    def on_abort(self):
+        ''' when script has to abort, cancel any open expects. '''
         info("ABORTING")
         self.abort = True
-        self.block.release()    # enable processing in the expect function 
+        self.block.release()  # enable processing in the expect function
 
     def start_timer(self):
         self.start_time = time.time()
@@ -83,7 +83,7 @@ class Expect():
         with self.mutex:
             self.incoming_data = ""
 
-    def expect(self, re_compare, timeout = 1):
+    def expect(self, re_compare, timeout=1):
         """ block until expected compare matches some input or timeout occurs
             returns the found text.
         """
@@ -91,29 +91,28 @@ class Expect():
 
         compare = re.compile(re_compare)
         while self.time_left(timeout) > 0:
-            self.block.acquire(True, self.time_left(timeout)) # block until some data arrives
+            self.block.acquire(True, self.time_left(timeout))  # block until some data arrives
             if self.abort:
                 raise Aborting
             with self.mutex:
                 matched = compare.search(self.incoming_data)
             if matched:
                 with self.mutex:
-                    self.incoming_data = self.incoming_data[matched.end(0):] # eat up the text that was found from the buffer
+                    self.incoming_data = self.incoming_data[matched.end(0):]  # eat up the text that was found from the buffer
                 if self.data_len():
-                    self.block.release() # release whenever we have data to process (for next call of expect())
+                    self.block.release()  # release whenever we have data to process (for next call of expect())
                 return matched.group(0)
-        raise NotFound(self.build_data)
+        raise NotFound(self.incoming_data, re_compare)
 
-    def wait(self, timeout = 1):
+    def wait(self, timeout=1):
         """ wait for the specified time to elapse, ignore the incoming text. Return the text that arrived during the wait. """
         self.start_timer()
         self.clear()
 
         # absorb the block.releases as data arrives
         while self.time_left(timeout) > 0:
-            self.block.acquire(True, self.time_left(timeout)) # block until some data arrives
+            self.block.acquire(True, self.time_left(timeout))  # block until some data arrives
         with self.mutex:
             text = self.incoming_data
         self.clear()
         return text
-

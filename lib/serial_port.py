@@ -37,7 +37,7 @@ class SerialPort(QObject):
 
     def open(self, comport, baud_rate):
         try:
-            self.serial = Serial(comport, baud_rate, timeout = 0.015)
+            self.serial = Serial(comport, baud_rate, timeout=0.015)
             return True
         except SerialException:
             return False
@@ -74,7 +74,7 @@ class SerialPort(QObject):
             while(self.running):
                 try:
                     btext = self.serial.read(100)
-                except (SerialException, TypeError): # this can happen on serial close
+                except (SerialException, TypeError):  # this can happen on serial close
                     continue
 
                 if len(btext) == 0:
@@ -88,13 +88,13 @@ class SerialPort(QObject):
                         ch = self.buffer[i]
                     except IndexError:
                         break
-                    if ch == '\r' or ch == '\n': # reached end-of-line
+                    if ch == '\r' or ch == '\n':  # reached end-of-line
                         try:
                             ch2 = self.buffer[i + 1]
                         except IndexError:
                             break
                         info(f"{self.buffer[:i]}")
-                        if ch2 == '\r' or ch2 == '\n' and ch != ch2: # end-of-line is 2 characters terminator
+                        if ch2 == '\r' or ch2 == '\n' and ch != ch2:  # end-of-line is 2 characters terminator
                             line = self.buffer[:i + 2]
                             self.buffer = self.buffer[i + 2:]
                         else:

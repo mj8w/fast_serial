@@ -153,16 +153,19 @@ class ActionUi():
         self.ui.actionList.takeItem(row)
         self.save_actions()
 
-class RunContext():
+class RunContext(QObject):
     """ Object contains everything that an action script can use to interact with the rest of
         the program
     """
+    aborted = pyqtSignal()
 
     def __init__(self, parent, list_widget_item):
+        super(RunContext, self).__init__()
         self.serial = parent.serial
         self.terminal = parent.com_traffic
         self.script = None
         self.parent = parent
+        self.parent.comport_disconnect.connect(self.abort)
 
         replacement = {"<cr>":"\r", "<lf>":"\n"}
 
@@ -178,6 +181,9 @@ class RunContext():
                 return
             self.script = mrun.group(1)
         self.name = list_widget_item.text()
+
+    def abort(self):
+        self.aborted.emit()
 
     def perform_action(self):
         ''' Perform the action in the action list item '''
@@ -207,13 +213,19 @@ class RunContext():
 
         self.dialog = RunActionDialog(self.parent, self.name)
         self.dialog.start()
-        
+
         def update_progress(percent):
             self.dialog.percent_complete = percent
-        
+
+        def finished():
+            self.dialog.percent_complete = 100
+
         # set up the script's thread
         self.thread = QThread()
-        self.worker = RunScript(read_signal = self.serial.read_text, script = self.script)
+        self.worker = RunScript(
+            read_signal=self.serial.read_text,
+            script=self.script,
+            abort_signal=self.aborted)
         self.worker.moveToThread(self.thread)
 
         # connect signals
@@ -221,24 +233,33 @@ class RunContext():
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
-        self.worker.progress.connect(update_progress)
-        self.worker.comment.connect(self.terminal.append_blue_text)
+        self.worker.finished.connect(finished)
+        self.worker.update_progress.connect(update_progress)
+        self.worker.update_comment.connect(self.terminal.append_blue_text)
         self.worker.write_serial.connect(self.write_to_serial)
         self.thread.start()
 
         # this will block until the dialog closes
         self.dialog.exec()
+        self.aborted.emit()
 
 class RunScript(QObject):
     finished = pyqtSignal()
-    progress = pyqtSignal(int)
+    update_progress = pyqtSignal(int)
     write_serial = pyqtSignal(str)
-    comment = pyqtSignal(str)
-    
-    def __init__(self, script, read_signal):
+    update_comment = pyqtSignal(str)
+
+    def __init__(self, script, read_signal, abort_signal):
         super(RunScript, self).__init__()
         self.script = script
         self.input = Expect(read_signal)
+        abort_signal.connect(self.input.on_abort)
+
+    def progress(self, percent):
+        self.update_progress.emit(percent)
+
+    def comment(self, text):
+        self.update_comment.emit(text)
 
     def write(self, text):
         self.write_serial.emit(text)
