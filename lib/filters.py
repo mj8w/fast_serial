@@ -19,12 +19,12 @@ Fast_serial project founded by Micheal Wilson
 """
 import re
 
-from PyQt5.QtWidgets import QListWidgetItem
+from PyQt5.QtWidgets import QListWidgetItem, QAbstractItemView
 from lib.set import add_user_setting, filters
 
 from lib.dialogs import FilterDialog
 try:
-    import scripts # @UnresolvedImport
+    import scripts  # @UnresolvedImport
 except ModuleNotFoundError:
     scripts = None
 
@@ -43,6 +43,7 @@ class FilterUi():
             self.ui.filterList.addItem(item)
 
         self.ui.filterList.itemClicked.connect(self.on_filter_clicked_item)
+        self.ui.filterList.itemSelectionChanged.connect(self.on_selection)
         self.ui.addFilterButton.clicked.connect(self.on_filter_add)
         self.ui.editFilterButton.clicked.connect(self.on_filter_edit)
         self.ui.removeFilterButton.clicked.connect(self.on_filter_remove)
@@ -57,6 +58,8 @@ class FilterUi():
 
         # by default, accept all lines and write them to the terminal
         self.active_filter = re.compile(".*")
+
+        self.ui.filterList.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
     def on_filter_list_up(self):
         row = self.ui.filterList.currentRow()
@@ -80,17 +83,20 @@ class FilterUi():
         self.save_filters()
 
     def on_filter_clicked_item(self, item):
-        info(f"clicked {item.text()}, {item.filter}")
-        self.ui.editFilterButton.setEnabled(True) # enable once a row is selected
+        self.ui.editFilterButton.setEnabled(True)  # enable once a row is selected
         self.ui.removeFilterButton.setEnabled(True)
-
-        # overwrite the default filter
-        self.active_filter = re.compile(item.filter)
 
         row = self.ui.filterList.currentRow()
         maxr = self.ui.filterList.count() - 1
         self.ui.upFilterButton.setEnabled(row != 0)
         self.ui.downFilterButton.setEnabled(row != maxr)
+
+    def on_selection(self):
+        filters = []
+        for item in self.ui.filterList.selectedItems():
+            filters.append(item.filter)
+        search = "|".join(filters)
+        self.active_filter = re.compile(search)
 
     def on_filter_add(self):
         info(f"clicked Add Button")
