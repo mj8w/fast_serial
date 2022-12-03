@@ -36,11 +36,14 @@ class FilterUi():
 
     def init_filter_elements(self):
 
+        self.ui.filterList.setSelectionMode(QAbstractItemView.ExtendedSelection)
+
         for element in filters:
-            name, the_filter = element
+            name, the_filter, selected = element
             item = QListWidgetItem(name)
             item.filter = the_filter
             self.ui.filterList.addItem(item)
+            item.setSelected(selected)
 
         self.ui.filterList.itemClicked.connect(self.on_filter_clicked_item)
         self.ui.filterList.itemSelectionChanged.connect(self.on_selection)
@@ -58,8 +61,6 @@ class FilterUi():
 
         # by default, accept all lines and write them to the terminal
         self.active_filter = re.compile(".*")
-
-        self.ui.filterList.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
     def on_filter_list_up(self):
         row = self.ui.filterList.currentRow()
@@ -83,6 +84,7 @@ class FilterUi():
         self.save_filters()
 
     def on_filter_clicked_item(self, item):
+        _ = item
         self.ui.editFilterButton.setEnabled(True)  # enable once a row is selected
         self.ui.removeFilterButton.setEnabled(True)
 
@@ -92,11 +94,13 @@ class FilterUi():
         self.ui.downFilterButton.setEnabled(row != maxr)
 
     def on_selection(self):
+        ''' Items selected changed '''
         filters = []
         for item in self.ui.filterList.selectedItems():
             filters.append(item.filter)
         search = "|".join(filters)
         self.active_filter = re.compile(search)
+        self.save_filters()
 
     def on_filter_add(self):
         info(f"clicked Add Button")
@@ -122,7 +126,8 @@ class FilterUi():
             item = self.ui.filterList.item(i)
             name = item.text()
             the_filter = item.filter
-            filters.append((name, the_filter))
+            selected = item in self.ui.filterList.selectedItems()
+            filters.append((name, the_filter, selected))
         add_user_setting('filters', filters)
 
     def on_filter_edit(self):

@@ -80,7 +80,7 @@ class SerialPort(QObject):
                 if len(btext) == 0:
                     continue
 
-                self.buffer += btext.decode("ISO-8859-1")
+                self.buffer += btext.decode("UTF-8")
 
                 i = 0
                 while 1:
