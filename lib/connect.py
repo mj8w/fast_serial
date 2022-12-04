@@ -88,6 +88,8 @@ class ConnectButton():
         """ When button is clicked and the result is the button is "OFF" """
 
         self.ui.comActivityEdit.selectionChanged.disconnect()
+        self.ui.comActivityEdit.selectionChanged.connect(self.onSelectionChanged)
+
         self.ui.connectButton.setEnabled(False)  # temporarily until thread has completed
         self.ui.connectButton.setStyleSheet("background-color : lightgrey")
         self.ui.comActivityEdit.setReadOnly(False)

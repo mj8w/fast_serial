@@ -33,6 +33,7 @@ files = [
 def main():
 
     for file in files:
+        print(f"{app} {file}.ui > ui_{file}.py")
         os.system(f"{app} {file}.ui > ui_{file}.py")
 
 if __name__ == '__main__':

@@ -288,7 +288,7 @@
         </layout>
        </widget>
       </widget>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_7">
@@ -319,6 +319,13 @@
            <widget class="QCheckBox" name="showCrLfCBox">
             <property name="text">
              <string>Show CrLf</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="metricsLabel">
+            <property name="text">
+             <string>rows:-   chars:-</string>
             </property>
            </widget>
           </item>
