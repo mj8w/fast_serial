@@ -111,6 +111,20 @@ class MainWindow(QMainWindow, ActionUi, FilterUi, ConnectButton):
         # the filter submenu activities are initialized here...
         self.init_filter_elements()
 
+    def onSelectionChanged(self):
+        cursor = self.ui.comActivityEdit.textCursor()
+        s = cursor.selection().toPlainText()
+
+        sl = s.splitlines()
+        chars = "".join(sl)  # count total non-cr/lf characters
+        showing_crlf = self.ui.showCrLfCBox.checkState()
+        showing_control = self.ui.showCtrlCBox.checkState()
+        # allch = cursor.selectionEnd() - cursor.selectionStart() - does not show all ctrl chars
+        if not showing_crlf and not showing_control:
+            self.ui.metricsLabel.setText(f"rows:{len(sl)}   chars:{len(chars)}")
+        else:
+            self.ui.metricsLabel.setText(f"rows:-   chars:-")
+
     def on_activity_selected(self):
         self.ui.comActivityEdit.selectionChanged.disconnect()
         cursor = self.ui.comActivityEdit.textCursor()
