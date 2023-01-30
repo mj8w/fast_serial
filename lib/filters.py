@@ -39,7 +39,11 @@ class FilterUi():
         self.ui.filterList.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
         for element in filters:
-            name, the_filter, selected = element
+            if len(element) == 2:  # old config files may have only 2 elements
+                name, the_filter = element
+                selected = False
+            else:
+                name, the_filter, selected = element
             item = QListWidgetItem(name)
             item.filter = the_filter
             self.ui.filterList.addItem(item)
