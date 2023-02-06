@@ -42,10 +42,15 @@ class FilterUi():
             if len(element) == 2:  # old config files may have only 2 elements
                 name, the_filter = element
                 selected = False
-            else:
+                block = False
+            elif len(element) == 3:
                 name, the_filter, selected = element
+                block = False
+            else:
+                name, the_filter, selected, block = element
             item = QListWidgetItem(name)
             item.filter = the_filter
+            item.block = block
             self.ui.filterList.addItem(item)
             item.setSelected(selected)
 
@@ -65,6 +70,10 @@ class FilterUi():
 
         # by default, accept all lines and write them to the terminal
         self.active_filter = re.compile(".*")
+        self.active_block = re.compile("a^")  # never matches
+
+        # set by selection:
+        self.on_selection()
 
     def on_filter_list_up(self):
         row = self.ui.filterList.currentRow()
@@ -96,15 +105,23 @@ class FilterUi():
         maxr = self.ui.filterList.count() - 1
         self.ui.upFilterButton.setEnabled(row != 0)
         self.ui.downFilterButton.setEnabled(row != maxr)
+        self.on_selection()
 
     def on_selection(self):
         ''' Items selected changed '''
         filters = []
+        blockers = ["a^"]
         for item in self.ui.filterList.selectedItems():
-            filters.append(item.filter)
+            print (item)
+            if item.block:
+                blockers.append(item.filter)
+            else:
+                filters.append(item.filter)
         search = "|".join(filters)
+        block = "|".join(blockers)
         self.active_filter = re.compile(search)
-        self.save_filters()
+        self.active_block = re.compile(block)
+        info(f"{self.active_block}")
 
     def on_filter_add(self):
         info(f"clicked Add Button")
@@ -112,6 +129,7 @@ class FilterUi():
         dialog = FilterDialog(self)
         FilterDialog.name = ""
         FilterDialog.filter = ""
+        FilterDialog.block = False
         success = dialog.exec()
         if not success:
             return
@@ -121,8 +139,10 @@ class FilterUi():
 
         item = QListWidgetItem(FilterDialog.name)
         item.filter = FilterDialog.filter
+        item.block = FilterDialog.block
         self.ui.filterList.addItem(item)
         self.save_filters()
+        self.on_selection()
 
     def save_filters(self):
         filters = []
@@ -131,12 +151,12 @@ class FilterUi():
             name = item.text()
             the_filter = item.filter
             selected = item in self.ui.filterList.selectedItems()
-            filters.append((name, the_filter, selected))
+            filters.append((name, the_filter, selected, item.block))
         add_user_setting('filters', filters)
 
     def on_filter_edit(self):
         item = self.ui.filterList.currentItem()
-        dialog = FilterDialog(self, item.text(), item.filter)
+        dialog = FilterDialog(self, item.text(), item.filter, item.block)
         info(f"edit {FilterDialog.name}")
 
         success = dialog.exec()
@@ -148,8 +168,10 @@ class FilterUi():
 
         item.setText(FilterDialog.name)
         item.filter = FilterDialog.filter
+        item.block = FilterDialog.block
 
         self.save_filters()
+        self.on_selection()
 
     def on_filter_remove(self):
         item = self.ui.filterList.currentItem()
@@ -158,3 +180,4 @@ class FilterUi():
         self.ui.filterList.takeItem(row)
 
         self.save_filters()
+        self.on_selection()

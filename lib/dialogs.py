@@ -15,7 +15,7 @@ class ActionDialog(QDialog):
     action = ""
     name = ""
 
-    def __init__(self, parent, name = "", action = ""):
+    def __init__(self, parent, name="", action=""):
         super(ActionDialog, self).__init__(parent)
 
         ActionDialog.name = name
@@ -44,12 +44,14 @@ class FilterDialog(QDialog):
 
     filter = ""
     name = ""
+    block = False
 
-    def __init__(self, parent, name = "", the_filter = ""):
+    def __init__(self, parent, name="", the_filter="", block=False):
         super(FilterDialog, self).__init__(parent)
 
         FilterDialog.name = name
         FilterDialog.filter = the_filter
+        FilterDialog.block = block
 
         self.ui = filterDialog()
         self.ui.setupUi(self)
@@ -60,12 +62,17 @@ class FilterDialog(QDialog):
 
         self.ui.nameEdit.setText(name)
         self.ui.filterEdit.setText(the_filter)
+        self.ui.blockCBox.setChecked(block)
 
         self.ui.nameEdit.textChanged.connect(self.on_name_changed)
         self.ui.filterEdit.textChanged.connect(self.on_filter_changed)
+        self.ui.blockCBox.stateChanged.connect(self.on_block_changed)
 
     def on_name_changed(self):
         FilterDialog.name = self.ui.nameEdit.text()
 
     def on_filter_changed(self):
         FilterDialog.filter = self.ui.filterEdit.toPlainText()
+
+    def on_block_changed(self):
+        FilterDialog.block = self.ui.blockCBox.isChecked()
