@@ -204,6 +204,10 @@ class MainWindow(QMainWindow, ActionUi, FilterUi, ConnectButton):
         """ Apply filters and insert the resulting text to the terminal window """
 
         matched = self.active_filter.search(output)
+        blocked = self.active_block.search(output)
+
+        if blocked != None:
+            return
 
         if matched != None:
             # found = matched.group(0)
