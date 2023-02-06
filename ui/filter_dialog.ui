@@ -34,6 +34,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="blockCBox">
+       <property name="text">
+        <string>block matching text</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="verticalSpacer">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
@@ -45,6 +52,16 @@
         </size>
        </property>
       </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>fA | fB | f!C | f!D</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
