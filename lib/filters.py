@@ -153,8 +153,8 @@ class FilterUi():
 
     def on_filter_remove(self):
         item = self.ui.filterList.currentItem()
-        filters.remove((item.text(), item.filter))
-        self.save_filters()
 
         row = self.ui.filterList.currentRow()
         self.ui.filterList.takeItem(row)
+
+        self.save_filters()
